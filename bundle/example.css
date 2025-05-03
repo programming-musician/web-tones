@@ -1,0 +1,36 @@
+html {
+    overflow: hidden;
+}
+
+body {
+    background-color: lightgray;
+    text-align: center;
+}
+
+div.tile {
+    display: inline-block;
+    border: 1px solid black;
+    border-radius: 5px;
+    background-color: white;
+    text-align: center;
+}
+
+div.tile.medium {
+    max-width: 30%;
+    max-height: 30%;
+    padding: 5em;
+}
+
+div.tile.large {
+    min-width: 60vw;
+    max-width: 90vw;
+    min-height: 60vh;
+    max-height: 90vh;
+    padding: 5em;
+    overflow: scroll;
+}
+
+.wide {
+    display: block;
+    width: 90%;
+}
