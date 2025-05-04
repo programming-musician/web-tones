@@ -3,7 +3,7 @@ Include /bundle/web-tones.js in your page. It can be downloaded using jsDelivr C
 Newest version: \
 https://cdn.jsdelivr.net/gh/programming-musician/web-tones/bundle/web-tones.js \
 Specific version: \
-https://cdn.jsdelivr.net/gh/programming-musician/web-tones@0.0.1/bundle/web-tones.js \
+https://cdn.jsdelivr.net/gh/programming-musician/web-tones@0.0.1/bundle/web-tones.js
 
 Start playback in any user action.
 
