@@ -27,3 +27,6 @@ var piano = new GrandPiano(simpleConsole);
 var staffPlayer = new StaffStringPlayer(piano);
 staffPlayer.processMusicString('e5/16,d#5/16 | e5/16,d#5/16,e5/16,b4/16,d5/16,c5/16');
 ```
+## Drawing music notes to canvas
+var staffPainter = new StaffStringPainter(canvas);
+staffPainter.processMusicString('e5/16,d#5/16 | e5/16,d#5/16,e5/16,b4/16,d5/16,c5/16');
