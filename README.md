@@ -1,5 +1,10 @@
 # Installation
-Include /bundle/web-tones.js in your page.
+Include /bundle/web-tones.js in your page. It can be downloaded using jsDelivr CDN: \
+Newest version: \
+https://cdn.jsdelivr.net/gh/programming-musician/web-tones/bundle/web-tones.js \
+Specific version: \
+https://cdn.jsdelivr.net/gh/programming-musician/web-tones@0.0.1/bundle/web-tones.js
+
 Start playback in any user action.
 
 # Examples
@@ -21,4 +26,9 @@ Class emulating 88 keys piano with standard frequencies ([wiki](https://en.wikip
 var piano = new GrandPiano(simpleConsole);
 var staffPlayer = new StaffStringPlayer(piano);
 staffPlayer.processMusicString('e5/16,d#5/16 | e5/16,d#5/16,e5/16,b4/16,d5/16,c5/16');
+```
+### Drawing music notes to canvas
+```
+var staffPainter = new StaffStringPainter(canvas);
+staffPainter.processMusicString('e5/16,d#5/16 | e5/16,d#5/16,e5/16,b4/16,d5/16,c5/16');
 ```
