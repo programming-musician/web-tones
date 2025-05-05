@@ -1,11 +1,20 @@
-var simpleConsole2;
+var simpleConsole2 = new WebTones.JavascriptConsole();
 var phoneDialPad;
-var examplePlayNumber = function (id) {
-    if (!simpleConsole2)
-        simpleConsole2 = new JavascriptConsole();
-    if (!phoneDialPad)
-        phoneDialPad = new PhoneDialPad(simpleConsole2);
+var examplePlayInput = function (id) {
     var input = document.getElementById(id);
     if (input)
-        phoneDialPad.playPhoneNumber(input.value);
+        examplePlayNumber(input.value);
+};
+var examplePlayNumber = function (number) {
+    if (!phoneDialPad)
+        phoneDialPad = new WebTones.PhoneDialPad(simpleConsole2);
+    phoneDialPad.playPhoneNumber(number);
+};
+var examplePlayTone = function () {
+    if (!phoneDialPad)
+        phoneDialPad = new WebTones.PhoneDialPad(simpleConsole2);
+    phoneDialPad.playTone(null, phoneDialPad.getCurrentTimeSec(), 700, 5000, 5000);
+    setTimeout(function () {
+        phoneDialPad.muteNow(1);
+    }, 4000);
 };

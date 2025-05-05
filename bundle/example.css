@@ -34,3 +34,13 @@ div.tile.large {
     display: block;
     width: 90%;
 }
+
+button.play {
+    margin: 0.4em;
+}
+
+button.dial {
+    font-size: 16pt;
+    font-weight: bold;
+    margin: 0.2em;
+}

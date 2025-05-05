@@ -2,13 +2,12 @@ var simpleConsole;
 var piano;
 var examplePlayMusic = function (id) {
     if (!simpleConsole)
-        simpleConsole = new JavascriptConsole();
+        simpleConsole = new WebTones.JavascriptConsole();
     if (!piano)
-        piano = new GrandPiano(simpleConsole);
+        piano = new WebTones.GrandPiano(simpleConsole);
     var input = document.getElementById(id);
     if (input) {
-        var timeSec = piano.getCurrentTimeSec();
-        var staffPlayer = new StaffStringPlayer(piano, timeSec);
+        var staffPlayer = new WebTones.StaffStringPlayer(piano);
         staffPlayer.setCarret(input.selectionStart);
         staffPlayer.processMusicString(input.value);
     }
@@ -16,7 +15,7 @@ var examplePlayMusic = function (id) {
 var exampleDrawMusic = function (inputId, outputId) {
     var input = document.getElementById(inputId);
     var output = document.getElementById(outputId);
-    var staffPainter = new StaffStringPainter(output);
+    var staffPainter = new WebTones.StaffStringPainter(output);
     staffPainter.setCarret(input.selectionStart);
     staffPainter.processMusicString(input.value);
 };
