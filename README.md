@@ -4,12 +4,16 @@ Newest version: \
 https://cdn.jsdelivr.net/gh/programming-musician/web-tones/bundle/web-tones.js \
 Specific version: \
 https://cdn.jsdelivr.net/gh/programming-musician/web-tones@0.0.2/bundle/web-tones.js
+HTML script tag can be used: \
+```
+<script type="text/javascript" src="./web-tones.js"></script>
+```
 
-Instruments like PhoneDialpad or GrandPiano should be created during user initiated action.
+Instruments like PhoneDialPad or Piano should be created during user initiated action.
 
 # Examples
 
-## Dial-pad
+## Dial Pad
 Class emulating phone dialpad sounds with standard frequencies ([wiki](https://en.wikipedia.org/wiki/Telephone_keypad)).\
 [Example](https://programming-musician.github.io/web-tones/bundle/example-dial.html)
 ### Playing simple phone number
