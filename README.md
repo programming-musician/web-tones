@@ -4,9 +4,11 @@ Newest version: \
 https://cdn.jsdelivr.net/gh/programming-musician/web-tones/bundle/web-tones.js \
 Specific version: \
 https://cdn.jsdelivr.net/gh/programming-musician/web-tones@0.0.2/bundle/web-tones.js
-HTML script tag can be used: \
+HTML script tag can be used:
 ```
 <script type="text/javascript" src="./web-tones.js"></script>
+OR
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/programming-musician/web-tones/bundle/web-tones.js"></script>
 ```
 
 Instruments like PhoneDialPad or Piano should be created during user initiated action.
