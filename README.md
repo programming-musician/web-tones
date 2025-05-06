@@ -22,8 +22,8 @@ Class emulating phone dialpad sounds with standard frequencies ([wiki](https://e
 [Example](https://programming-musician.github.io/web-tones/bundle/example-dial.html)
 ### Playing simple phone number
 ```
-var phoneDialPad = new WebTones.PhoneDialPad();
-phoneDialPad.playPhoneNumber('123-456-789');
+var dialPad = new WebTones.DialPad();
+dialPad.playPhoneNumber('123-456-789');
 ```
 
 ## Piano
@@ -31,12 +31,12 @@ Class emulating 88 keys piano with standard frequencies ([wiki](https://en.wikip
 [Example](https://programming-musician.github.io/web-tones/bundle/example-piano.html)
 ### Playing simple music
 ```
-var piano = new WebTones.GrandPiano(simpleConsole);
+var piano = new WebTones.Piano(simpleConsole);
 var staffPlayer = new WebTones.StaffStringPlayer(piano);
-staffPlayer.processMusicString('e5/16,d#5/16 | e5/16,d#5/16,e5/16,b4/16,d5/16,c5/16');
+staffPlayer.process('e5/16,d#5/16 | e5/16,d#5/16,e5/16,b4/16,d5/16,c5/16');
 ```
 ### Drawing music notes to canvas
 ```
 var staffPainter = new WebTones.StaffStringPainter(canvas);
-staffPainter.processMusicString('e5/16,d#5/16 | e5/16,d#5/16,e5/16,b4/16,d5/16,c5/16');
+staffPainter.process('e5/16,d#5/16 | e5/16,d#5/16,e5/16,b4/16,d5/16,c5/16');
 ```
