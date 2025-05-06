@@ -50,6 +50,7 @@ var WebTones;
         };
         AudioPlayer.prototype.muteNow = function (durationSec) {
             var timeSec = this.audioContext.currentTime;
+            // todo should freq be changed
             this.audioOscilatorSecs = new Array(0);
             var currentFrequency = this.audioOscilator.frequency.value;
             this.audioOscilator.frequency.cancelScheduledValues(timeSec);
@@ -265,46 +266,39 @@ var __extends = (this && this.__extends) || (function () {
 })();
 var WebTones;
 (function (WebTones) {
-    var GrandPiano = /** @class */ (function (_super) {
-        __extends(GrandPiano, _super);
-        function GrandPiano(console) {
-            var _this = _super.call(this, GrandPiano.playersCount, console) || this;
-            _this.playerIndex = 0;
+    var DialPad = /** @class */ (function (_super) {
+        __extends(DialPad, _super);
+        function DialPad(console) {
+            var _this = _super.call(this, 2, console) || this;
+            _this.keyDurationSec = 0.3;
             return _this;
         }
-        GrandPiano.prototype.playNote = function (timeSec, note, durationSec) {
-            var playerIndex = this.chooseNextPlayerIndex();
-            var frequency = GrandPiano.frequencies[note];
-            var rampUpSec = GrandPiano.rampUpSec;
-            var rampDownSec = Math.max(rampUpSec, durationSec - rampUpSec);
-            if (frequency && durationSec) {
-                this.playTone(playerIndex, timeSec, frequency, rampUpSec, rampDownSec);
-                return rampUpSec + rampDownSec;
+        DialPad.prototype.playPhoneNumber = function (phoneNumber) {
+            this.muteNow(this.keyDurationSec / 2);
+            var timeSec = this.getMaxTimeSec();
+            for (var i = 0; i < phoneNumber.length; i++) {
+                var digit = phoneNumber.charAt(i);
+                timeSec += this.playNote(timeSec, digit, this.keyDurationSec);
             }
-            else
-                return 0;
         };
-        GrandPiano.prototype.chooseNextPlayerIndex = function () {
-            var result = this.playerIndex;
-            this.playerIndex = (this.playerIndex + 1) % GrandPiano.playersCount;
-            return result;
+        DialPad.prototype.playNote = function (timeSec, note, durationSec) {
+            var freqs = DialPad.frequencies[note];
+            if (freqs) {
+                var rampSec = durationSec / 2;
+                this.playTone(0, timeSec, freqs[0], rampSec, rampSec);
+                this.playTone(1, timeSec, freqs[1], rampSec, rampSec);
+            }
+            return this.keyDurationSec;
         };
-        GrandPiano.rampUpSec = 0.05;
-        GrandPiano.playersCount = 16;
-        GrandPiano.frequencies = {
-            "a0": 27.50, "a#0": 29.14, "b0": 30.87,
-            "c1": 32.70, "c#1": 34.65, "d1": 36.71, "d#1": 38.89, "e1": 41.20, "f1": 43.65, "f#1": 46.25, "g1": 49.00, "g#1": 51.91, "a1": 55.00, "a#1": 58.27, "b1": 61.74,
-            "c2": 65.41, "c#2": 69.30, "d2": 73.42, "d#2": 77.78, "e2": 82.41, "f2": 87.31, "f#2": 92.50, "g2": 98.00, "g#2": 103.83, "a2": 110.00, "a#2": 116.54, "b2": 123.47,
-            "c3": 130.81, "c#3": 138.59, "d3": 146.83, "d#3": 155.56, "e3": 164.81, "f3": 174.61, "f#3": 185.00, "g3": 196.00, "g#3": 207.65, "a3": 220.00, "a#3": 233.08, "b3": 246.94,
-            "c4": 261.63, "c#4": 277.18, "d4": 293.66, "d#4": 311.13, "e4": 329.63, "f4": 349.23, "f#4": 369.99, "g4": 392.00, "g#4": 415.30, "a4": 440.00, "a#4": 466.16, "b4": 493.88,
-            "c5": 523.25, "c#5": 554.37, "d5": 587.33, "d#5": 622.25, "e5": 659.25, "f5": 698.46, "f#5": 739.99, "g5": 783.99, "g#5": 830.61, "a5": 880.00, "a#5": 932.33, "b5": 987.77,
-            "c6": 1046.50, "c#6": 1108.73, "d6": 1174.66, "d#6": 1244.51, "e6": 1318.51, "f6": 1396.91, "f#6": 1479.98, "g6": 1567.98, "g#6": 1661.22, "a6": 1760.00, "a#6": 1864.66, "b6": 1975.53,
-            "c7": 2093.00, "c#7": 2217.46, "d7": 2349.32, "d#7": 2489.02, "e7": 2637.02, "f7": 2793.83, "f#7": 2959.96, "g7": 3135.96, "g#7": 3322.44, "a7": 3520.00, "a#7": 3729.31, "b7": 3951.07,
-            "c8": 4186.09,
+        DialPad.frequencies = {
+            '1': [697, 1209], '2': [697, 1336], '3': [697, 1477],
+            '4': [770, 1209], '5': [770, 1336], '6': [770, 1477],
+            '7': [852, 1209], '8': [852, 1336], '9': [852, 1477],
+            '*': [941, 1209], '0': [941, 1336], '#': [941, 1477]
         };
-        return GrandPiano;
+        return DialPad;
     }(WebTones.Instrument));
-    WebTones.GrandPiano = GrandPiano;
+    WebTones.DialPad = DialPad;
 })(WebTones || (WebTones = {}));
 var __extends = (this && this.__extends) || (function () {
     var extendStatics = function (d, b) {
@@ -321,39 +315,46 @@ var __extends = (this && this.__extends) || (function () {
 })();
 var WebTones;
 (function (WebTones) {
-    var PhoneDialPad = /** @class */ (function (_super) {
-        __extends(PhoneDialPad, _super);
-        function PhoneDialPad(console) {
-            var _this = _super.call(this, 2, console) || this;
-            _this.keyDurationSec = 0.3;
+    var Piano = /** @class */ (function (_super) {
+        __extends(Piano, _super);
+        function Piano(console) {
+            var _this = _super.call(this, Piano.playersCount, console) || this;
+            _this.playerIndex = 0;
             return _this;
         }
-        PhoneDialPad.prototype.playPhoneNumber = function (phoneNumber) {
-            this.muteNow(this.keyDurationSec / 2);
-            var timeSec = this.getMaxTimeSec();
-            for (var i = 0; i < phoneNumber.length; i++) {
-                var digit = phoneNumber.charAt(i);
-                timeSec += this.playNote(timeSec, digit, this.keyDurationSec);
+        Piano.prototype.playNote = function (timeSec, note, durationSec) {
+            var playerIndex = this.chooseNextPlayerIndex();
+            var frequency = Piano.frequencies[note];
+            var rampUpSec = Piano.rampUpSec;
+            var rampDownSec = Math.max(rampUpSec, durationSec - rampUpSec);
+            if (frequency && durationSec) {
+                this.playTone(playerIndex, timeSec, frequency, rampUpSec, rampDownSec);
+                return rampUpSec + rampDownSec;
             }
+            else
+                return 0;
         };
-        PhoneDialPad.prototype.playNote = function (timeSec, note, durationSec) {
-            var freqs = PhoneDialPad.frequencies[note];
-            if (freqs) {
-                var rampSec = durationSec / 2;
-                this.playTone(0, timeSec, freqs[0], rampSec, rampSec);
-                this.playTone(1, timeSec, freqs[1], rampSec, rampSec);
-            }
-            return this.keyDurationSec;
+        Piano.prototype.chooseNextPlayerIndex = function () {
+            var result = this.playerIndex;
+            this.playerIndex = (this.playerIndex + 1) % Piano.playersCount;
+            return result;
         };
-        PhoneDialPad.frequencies = {
-            '1': [697, 1209], '2': [697, 1336], '3': [697, 1477],
-            '4': [770, 1209], '5': [770, 1336], '6': [770, 1477],
-            '7': [852, 1209], '8': [852, 1336], '9': [852, 1477],
-            '*': [941, 1209], '0': [941, 1336], '#': [941, 1477]
+        Piano.rampUpSec = 0.05;
+        Piano.playersCount = 16;
+        Piano.frequencies = {
+            "a0": 27.50, "a#0": 29.14, "b0": 30.87,
+            "c1": 32.70, "c#1": 34.65, "d1": 36.71, "d#1": 38.89, "e1": 41.20, "f1": 43.65, "f#1": 46.25, "g1": 49.00, "g#1": 51.91, "a1": 55.00, "a#1": 58.27, "b1": 61.74,
+            "c2": 65.41, "c#2": 69.30, "d2": 73.42, "d#2": 77.78, "e2": 82.41, "f2": 87.31, "f#2": 92.50, "g2": 98.00, "g#2": 103.83, "a2": 110.00, "a#2": 116.54, "b2": 123.47,
+            "c3": 130.81, "c#3": 138.59, "d3": 146.83, "d#3": 155.56, "e3": 164.81, "f3": 174.61, "f#3": 185.00, "g3": 196.00, "g#3": 207.65, "a3": 220.00, "a#3": 233.08, "b3": 246.94,
+            "c4": 261.63, "c#4": 277.18, "d4": 293.66, "d#4": 311.13, "e4": 329.63, "f4": 349.23, "f#4": 369.99, "g4": 392.00, "g#4": 415.30, "a4": 440.00, "a#4": 466.16, "b4": 493.88,
+            "c5": 523.25, "c#5": 554.37, "d5": 587.33, "d#5": 622.25, "e5": 659.25, "f5": 698.46, "f#5": 739.99, "g5": 783.99, "g#5": 830.61, "a5": 880.00, "a#5": 932.33, "b5": 987.77,
+            "c6": 1046.50, "c#6": 1108.73, "d6": 1174.66, "d#6": 1244.51, "e6": 1318.51, "f6": 1396.91, "f#6": 1479.98, "g6": 1567.98, "g#6": 1661.22, "a6": 1760.00, "a#6": 1864.66, "b6": 1975.53,
+            "c7": 2093.00, "c#7": 2217.46, "d7": 2349.32, "d#7": 2489.02, "e7": 2637.02, "f7": 2793.83, "f#7": 2959.96, "g7": 3135.96, "g#7": 3322.44, "a7": 3520.00, "a#7": 3729.31, "b7": 3951.07,
+            "c8": 4186.09,
         };
-        return PhoneDialPad;
+        return Piano;
     }(WebTones.Instrument));
-    WebTones.PhoneDialPad = PhoneDialPad;
+    WebTones.Piano = Piano;
 })(WebTones || (WebTones = {}));
 var __extends = (this && this.__extends) || (function () {
     var extendStatics = function (d, b) {
@@ -390,7 +391,7 @@ var WebTones;
         StaffString.prototype.setCarret = function (carret) {
             this.carret = carret;
         };
-        StaffString.prototype.processMusicString = function (music) {
+        StaffString.prototype.process = function (music) {
             var totalChars = 0;
             var totalDurationSec = 0;
             var chords = music.split(/\s/);

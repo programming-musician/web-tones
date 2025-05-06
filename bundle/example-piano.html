@@ -11,6 +11,7 @@
 			document.getElementById('play_button').onclick = () => examplePlayMusic('number_input');
 			document.getElementById('number_input').oninput = () => exampleDrawMusic('number_input', 'staff_output');
 			document.getElementById('number_input').onselectionchange = () => exampleDrawMusic('number_input', 'staff_output');
+			document.getElementById('number_input').value = notesFuElise;
 			exampleDrawMusic('number_input', 'staff_output');
 		}
 	</script>
