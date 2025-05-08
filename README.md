@@ -17,18 +17,18 @@ Instruments like PhoneDialPad or Piano should be created during user initiated a
 
 # Examples
 
-## Dial Pad
-Class emulating phone dialpad sounds with standard frequencies ([wiki](https://en.wikipedia.org/wiki/Telephone_keypad)).\
-See [example](https://programming-musician.github.io/web-tones/bundle/example-dialpad.html).
+## 📞 Dial Pad
+Class emulating phone dial pad with standard ([wiki](https://en.wikipedia.org/wiki/Telephone_keypad)).
+See interactive example [here](https://programming-musician.github.io/web-tones/bundle/example-dialpad.html).
 ### Playing simple phone number
 ```
 var dialPad = new WebTones.DialPad();
 dialPad.playPhoneNumber('123-456-789');
 ```
 
-## Piano
-Class emulating 88 keys piano with standard frequencies ([wiki](https://en.wikipedia.org/wiki/Piano_key_frequencies)).\
-See [example](https://programming-musician.github.io/web-tones/bundle/example-piano.html).
+## 🎹 Piano
+Class emulating 88 keys piano with standard frequencies ([wiki](https://en.wikipedia.org/wiki/Piano_key_frequencies)).
+See interactive example [here](https://programming-musician.github.io/web-tones/bundle/example-piano.html).
 ### Playing simple music
 ```
 var piano = new WebTones.Piano(simpleConsole);
@@ -39,4 +39,9 @@ staffPlayer.process('e5/16,d#5/16 | e5/16,d#5/16,e5/16,b4/16,d5/16,c5/16');
 ```
 var staffPainter = new WebTones.StaffStringPainter(canvas);
 staffPainter.process('e5/16,d#5/16 | e5/16,d#5/16,e5/16,b4/16,d5/16,c5/16');
+```
+
+## 📻 Theremin
+```
+// todo
 ```
