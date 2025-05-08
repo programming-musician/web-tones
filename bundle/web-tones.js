@@ -122,6 +122,7 @@ var WebTones;
 (function (WebTones) {
     var TonesPlayer = /** @class */ (function () {
         function TonesPlayer(console, otherTones) {
+            this.volumes = [1.0, 1.0];
             this.console = console;
             this.audioPlayer = new WebTones.AudioPlayer();
             this.audioPlayer.initFrontStereoPlayer(otherTones === null || otherTones === void 0 ? void 0 : otherTones.audioPlayer);
@@ -138,6 +139,9 @@ var WebTones;
         TonesPlayer.prototype.getMaxTimeSec = function () {
             return this.audioPlayer.getMaxTimeSec();
         };
+        TonesPlayer.prototype.setVolumes = function (volumes) {
+            this.volumes = volumes.slice();
+        };
         TonesPlayer.prototype.playTone = function (timeSec, frequency, rampUpSec, rampDownSec) {
             var up2Sec = timeSec + rampUpSec / 2;
             var upSec = timeSec + rampUpSec;
@@ -147,12 +151,12 @@ var WebTones;
             this.audioPlayer.setFrequencyChange(frequency, downSec);
             this.audioPlayer.setGainChange(0, 0.0, timeSec);
             this.audioPlayer.setGainChange(1, 0.0, timeSec);
-            this.audioPlayer.setGainChange(0, 0.75, up2Sec);
-            this.audioPlayer.setGainChange(1, 0.75, up2Sec);
-            this.audioPlayer.setGainChange(0, 1.0, upSec);
-            this.audioPlayer.setGainChange(1, 1.0, upSec);
-            this.audioPlayer.setGainChange(0, 0.3, down2Sec);
-            this.audioPlayer.setGainChange(1, 0.3, down2Sec);
+            this.audioPlayer.setGainChange(0, 0.75 * this.volumes[0], up2Sec);
+            this.audioPlayer.setGainChange(1, 0.75 * this.volumes[1], up2Sec);
+            this.audioPlayer.setGainChange(0, 1.0 * this.volumes[0], upSec);
+            this.audioPlayer.setGainChange(1, 1.0 * this.volumes[1], upSec);
+            this.audioPlayer.setGainChange(0, 0.3 * this.volumes[0], down2Sec);
+            this.audioPlayer.setGainChange(1, 0.3 * this.volumes[1], down2Sec);
             this.audioPlayer.setGainChange(0, 0.0, downSec);
             this.audioPlayer.setGainChange(1, 0.0, downSec);
         };
@@ -231,6 +235,15 @@ var WebTones;
                 result = Math.max(result, tonePlayer.getMaxTimeSec());
             }
             return result;
+        };
+        Instrument.prototype.setVolumes = function (playerIndex, volumes) {
+            if (playerIndex != null) {
+                var tonePlayer = this.tonePlayers[playerIndex];
+                tonePlayer.setVolumes(volumes);
+            }
+            else
+                for (var playerIndex2 = 0; playerIndex2 < this.tonePlayers.length; playerIndex2++)
+                    this.setVolumes(playerIndex2, volumes);
         };
         Instrument.prototype.playTone = function (playerIndex, timeSec, frequency, rampUpSec, rampDownSec) {
             if (playerIndex != null) {
@@ -328,6 +341,10 @@ var WebTones;
             var rampUpSec = Piano.rampUpSec;
             var rampDownSec = Math.max(rampUpSec, durationSec - rampUpSec);
             if (frequency && durationSec) {
+                var f1 = Piano.frequencies["a0"];
+                var f2 = Piano.frequencies["c8"];
+                var s = Math.sqrt(Math.sqrt((frequency - f1) / (f2 - f1)));
+                this.setVolumes(playerIndex, [1.0 - s, s]);
                 this.playTone(playerIndex, timeSec, frequency, rampUpSec, rampDownSec);
                 return rampUpSec + rampDownSec;
             }
@@ -392,61 +409,47 @@ var WebTones;
             this.carret = carret;
         };
         StaffString.prototype.process = function (music) {
+            this.symbols = [];
             var totalChars = 0;
-            var totalDurationSec = 0;
             var chords = music.split(/\s/);
             for (var c = 0; c < chords.length; c++) {
                 totalChars += c > 0 ? 1 : 0;
-                this.chordBegin();
                 var notes = chords[c].split(':');
-                var chordDurationSec = 0;
                 for (var n = 0; n < notes.length; n++) {
                     totalChars += n > 0 ? 1 : 0;
-                    this.chordSubBegin();
-                    var subDurationSec = 0;
                     var subNotes = notes[n].split(',');
                     for (var s = 0; s < subNotes.length; s++) {
                         totalChars += s > 0 ? 1 : 0;
-                        if (this.carret >= totalChars && this.carret < totalChars + subNotes[s].length)
-                            this.processCarret();
-                        totalChars += subNotes[s].length;
-                        subDurationSec += this.playNoteString(totalDurationSec + subDurationSec, subNotes[s]);
+                        var symbol = this.createSymbol(subNotes[s]);
+                        symbol.chordFirst = n == 0 && s == 0;
+                        symbol.chordLast = n == notes.length - 1 && s == subNotes.length - 1;
+                        symbol.seqFirst = s == 0;
+                        symbol.seqLast = s == subNotes.length - 1;
+                        symbol.posBegin = totalChars;
+                        symbol.posEnd = totalChars + subNotes[s].length;
+                        this.symbols.push(symbol);
+                        totalChars = symbol.posEnd;
                     }
-                    this.chordSubEnd();
-                    chordDurationSec = Math.max(chordDurationSec, subDurationSec);
                 }
-                this.chordEnd();
-                totalDurationSec += chordDurationSec;
-                totalDurationSec += this.processSpace();
             }
-            this.prevMusic = music;
-            return totalDurationSec;
+            this.processSymbols();
         };
-        StaffString.prototype.playNoteString = function (timeSec, note) {
-            var parts = note.trim().split('/');
-            var noteName = parts[0];
-            var noteDiv = parts.length == 2 ? new Number(parts[1]).valueOf() : 1;
-            return this.processNote(timeSec, noteName, noteDiv);
-        };
-        StaffString.prototype.chordBegin = function () {
-        };
-        StaffString.prototype.chordEnd = function () {
-        };
-        StaffString.prototype.chordSubBegin = function () {
-        };
-        StaffString.prototype.chordSubEnd = function () {
-        };
-        StaffString.prototype.processCarret = function () {
-        };
-        StaffString.prototype.processNote = function (timeSec, note, noteDiv) {
-            return 0;
-        };
-        StaffString.prototype.processSpace = function () {
-            return 0;
+        StaffString.prototype.createSymbol = function (noteName) {
+            var symbol = new StaffSymbol();
+            var parts = noteName.trim().split('/');
+            symbol.noteName = parts[0];
+            symbol.noteDiv = parts.length == 2 ? new Number(parts[1]).valueOf() : 1;
+            return symbol;
         };
         return StaffString;
     }());
     WebTones.StaffString = StaffString;
+    var StaffSymbol = /** @class */ (function () {
+        function StaffSymbol() {
+        }
+        return StaffSymbol;
+    }());
+    WebTones.StaffSymbol = StaffSymbol;
 })(WebTones || (WebTones = {}));
 var __extends = (this && this.__extends) || (function () {
     var extendStatics = function (d, b) {
@@ -484,51 +487,66 @@ var WebTones;
             _this.context.clearRect(0, 0, _this.canvas.width, _this.canvas.height);
             return _this;
         }
-        StaffStringPainter.prototype.processCarret = function () {
-            this.noteSelected = true;
+        StaffStringPainter.prototype.processSymbols = function () {
+            for (var index = 0; index < this.symbols.length; index++) {
+                var symbol = this.symbols[index];
+                if (symbol.chordFirst) {
+                    this.notesDrawnCordStart = this.notesDrawn;
+                    this.notesDrawnCordEnd = this.notesDrawn;
+                }
+                if (symbol.seqFirst)
+                    this.notesDrawn = this.notesDrawnCordStart;
+                if (this.carret >= symbol.posBegin && this.carret <= symbol.posEnd)
+                    this.noteSelected = true;
+                index = this.processNote(index);
+                if (symbol.seqLast)
+                    this.notesDrawnCordEnd = Math.max(this.notesDrawnCordEnd, this.notesDrawn);
+                if (symbol.chordLast)
+                    this.notesDrawn = this.notesDrawnCordEnd;
+                if (symbol.chordLast)
+                    this.notesDrawn += 0.5;
+            }
         };
-        StaffStringPainter.prototype.processNote = function (timeSec, note, noteDiv) {
+        StaffStringPainter.prototype.processNote = function (index) {
             if (this.stuffIndex < 0) {
                 this.stuffIndex = 0;
                 this.drawStaff();
             }
-            if (note == '|') {
+            var symbol = this.symbols[index];
+            if (symbol.noteName == '|') {
                 this.drawWall();
                 this.notesDrawn += 0.5;
+                return index;
             }
-            else if (note == '||') {
+            else if (symbol.noteName == '||') {
                 this.drawWall();
                 this.stuffIndex++;
                 this.notesDrawn = 0;
                 this.notesDrawnCordStart = 0;
                 this.notesDrawnCordEnd = 0;
                 this.drawStaff();
+                return index;
             }
-            else if (note == '\n') {
+            else if (symbol.noteName == '\n') {
+                return index;
             }
             else {
-                this.drawNote(note, noteDiv);
-                this.noteSelected = false;
-                this.notesDrawn += 1.0;
+                if (symbol.seqFirst && !symbol.seqLast) {
+                    var index2 = this.findSeqLast(index);
+                    if (index2 > -1) {
+                        this.drawNotesSequence(index, index2);
+                        return index2;
+                    }
+                    else {
+                        this.drawNote(index, true);
+                        return index;
+                    }
+                }
+                else {
+                    this.drawNote(index, true);
+                    return index;
+                }
             }
-            return 0;
-        };
-        StaffStringPainter.prototype.processSpace = function () {
-            this.notesDrawn += 0.5;
-            return 0;
-        };
-        StaffStringPainter.prototype.chordBegin = function () {
-            this.notesDrawnCordStart = this.notesDrawn;
-            this.notesDrawnCordEnd = this.notesDrawn;
-        };
-        StaffStringPainter.prototype.chordEnd = function () {
-            this.notesDrawn = this.notesDrawnCordEnd;
-        };
-        StaffStringPainter.prototype.chordSubBegin = function () {
-            this.notesDrawn = this.notesDrawnCordStart;
-        };
-        StaffStringPainter.prototype.chordSubEnd = function () {
-            this.notesDrawnCordEnd = Math.max(this.notesDrawnCordEnd, this.notesDrawn);
         };
         StaffStringPainter.prototype.drawStaff = function () {
             var width = this.canvas.width;
@@ -539,50 +557,96 @@ var WebTones;
                 this.drawLine(this.LineColor, 0, y2, width, y2);
             }
         };
-        StaffStringPainter.prototype.drawNote = function (note, noteDiv) {
-            var line = this.getNoteLine(note);
-            var x = this.getNoteX();
+        StaffStringPainter.prototype.drawNotesSequence = function (index, index2) {
+            var symbol = this.symbols[index];
+            var symbol2 = this.symbols[index2];
+            var noteX1 = this.getCurrentX();
+            var noteX2 = this.getCurrentX();
+            for (var i = index; i <= index2; i++) {
+                noteX2 = this.getCurrentX();
+                this.drawNote(i, false);
+            }
+            var line1 = this.getNoteLine(symbol.noteName);
+            var line2 = this.getNoteLine(symbol2.noteName);
+            var fx1 = this.getFlagX(line1, noteX1);
+            var fy1 = this.getFlagY(line1);
+            var fx2 = this.getFlagX(line2, noteX2);
+            var fy2 = this.getFlagY(line2);
+            this.context.beginPath();
+            this.context.moveTo(fx1, fy1);
+            this.context.lineTo(fx2, fy2);
+            this.context.stroke();
+        };
+        StaffStringPainter.prototype.drawNote = function (index, drawSingleFlag) {
+            var symbol = this.symbols[index];
+            var line = this.getNoteLine(symbol.noteName);
+            var noteX = this.getCurrentX();
+            var noteY = this.getNoteY(line);
+            if (line == -1)
+                this.drawMiniLine(line, noteX);
+            else if (line >= 5)
+                for (var line2 = 5; line2 <= line; line2++)
+                    this.drawMiniLine(line2, noteX);
+            else if (line <= -7)
+                for (var line2 = -7; line2 >= line; line2--)
+                    this.drawMiniLine(line2, noteX);
+            this.drawElipse(noteX, noteY, symbol.noteDiv > 2);
+            if (symbol.noteDiv > 1)
+                this.drawFlagPost(line, symbol.noteDiv, noteX, noteY, drawSingleFlag);
+            if (this.noteSelected) {
+                var rx = this.noteWidth;
+                var ry = this.noteWidth * 4 / 5;
+                this.context.beginPath();
+                this.context.ellipse(noteX, noteY, rx, ry, -Math.PI / 16, 0, Math.PI * 2);
+                this.context.stroke();
+            }
+            this.noteSelected = false;
+            this.notesDrawn += 1.0;
+        };
+        StaffStringPainter.prototype.drawMiniLine = function (line, x) {
+            this.context.beginPath();
             var y = this.getNoteY(line);
-            var nw = this.noteWidth;
+            this.context.moveTo(x - this.noteWidth, y);
+            this.context.lineTo(x + this.noteWidth, y);
+            this.context.strokeStyle = this.NoteColor;
+            this.context.stroke();
+        };
+        StaffStringPainter.prototype.drawElipse = function (x, y, fill) {
             var nw2 = this.noteWidth / 2;
             var rx = nw2;
             var ry = nw2 * 4 / 5;
-            if (line == -1) {
-                this.context.beginPath();
-                this.context.moveTo(x - nw, y);
-                this.context.lineTo(x + nw, y);
-                this.context.strokeStyle = this.LineColor;
-                this.context.stroke();
-            }
             this.context.beginPath();
             this.context.ellipse(x, y, rx, ry, -Math.PI / 16, 0, Math.PI * 2);
-            if (noteDiv > 2) {
+            if (fill) {
                 this.context.fillStyle = this.NoteColor;
                 this.context.fill();
             }
+        };
+        StaffStringPainter.prototype.drawFlagPost = function (line, noteDiv, noteX, noteY, drawSingleFlag) {
             this.context.beginPath();
-            if (noteDiv > 1) {
-                var flagDir = line < 3 ? 1 : -1;
-                var flagX = x + flagDir * nw2;
-                var yt = this.getNoteY(line + flagDir * this.flagLen);
-                this.context.moveTo(flagX, y);
-                this.context.lineTo(flagX, yt);
-                var dashes = Math.floor(noteDiv / 8);
-                for (var i = 0; i < dashes; i++) {
-                    this.context.moveTo(flagX, yt + flagDir * i * nw2);
-                    this.context.lineTo(flagX + nw, yt + flagDir * i * nw2 + flagDir * nw2 / 2);
-                }
+            var flagX = this.getFlagX(line, noteX);
+            var flagY = this.getFlagY(line);
+            this.context.moveTo(flagX, noteY);
+            this.context.lineTo(flagX, flagY);
+            this.context.strokeStyle = this.NoteColor;
+            this.context.stroke();
+            if (drawSingleFlag)
+                this.drawDashes(line, noteDiv, flagX, flagY);
+        };
+        StaffStringPainter.prototype.drawDashes = function (line, noteDiv, flagX, flagY) {
+            var flagDir = this.getFlagDir(line);
+            var nw2 = this.noteWidth / 2;
+            var dashes = Math.floor(noteDiv / 8);
+            this.context.beginPath();
+            for (var i = 0; i < dashes; i++) {
+                this.context.moveTo(flagX, flagY + flagDir * i * nw2);
+                this.context.lineTo(flagX + this.noteWidth, flagY + flagDir * i * nw2 + flagDir * nw2 / 2);
             }
             this.context.strokeStyle = this.NoteColor;
             this.context.stroke();
-            if (this.noteSelected) {
-                this.context.beginPath();
-                this.context.ellipse(x, y, rx * 2, ry * 2, -Math.PI / 16, 0, Math.PI * 2);
-                this.context.stroke();
-            }
         };
         StaffStringPainter.prototype.drawWall = function () {
-            var x = this.getNoteX();
+            var x = this.getCurrentX();
             var y1 = this.getNoteY(4);
             var y2 = this.getNoteY(-6);
             this.context.beginPath();
@@ -596,19 +660,34 @@ var WebTones;
             this.context.strokeStyle = style;
             this.context.stroke();
         };
-        StaffStringPainter.prototype.getNoteX = function () {
-            return this.noteWidth + this.notesDrawn * this.noteWidth * 1.5;
+        StaffStringPainter.prototype.findSeqLast = function (index) {
+            for (var i = index + 1; i < this.symbols.length; i++)
+                if (this.symbols[i].seqLast)
+                    return i;
+            return -1;
         };
-        StaffStringPainter.prototype.getNoteY = function (line) {
-            return this.getLineY(this.stuffIndex, line);
-        };
-        StaffStringPainter.prototype.getNoteLine = function (note) {
-            note = note.toLowerCase();
-            var n = note.charCodeAt(0);
-            var o = note.charCodeAt(note.length - 1);
+        StaffStringPainter.prototype.getNoteLine = function (noteName) {
+            noteName = noteName.toLowerCase();
+            var n = noteName.charCodeAt(0);
+            var o = noteName.charCodeAt(noteName.length - 1);
             return n < this.CodeC ?
                 (n - this.CodeA + (o - this.Code4) * 7) / 2 + 1.5 :
                 (n - this.CodeC + (o - this.Code4) * 7) / 2 - 1;
+        };
+        StaffStringPainter.prototype.getCurrentX = function () {
+            return this.noteWidth + this.notesDrawn * this.noteWidth * 1.5;
+        };
+        StaffStringPainter.prototype.getFlagX = function (line, x) {
+            return x + this.getFlagDir(line) * this.noteWidth / 2;
+        };
+        StaffStringPainter.prototype.getFlagY = function (line) {
+            return this.getNoteY(line + this.getFlagDir(line) * this.flagLen);
+        };
+        StaffStringPainter.prototype.getFlagDir = function (line) {
+            return line < 3 ? 1 : -1;
+        };
+        StaffStringPainter.prototype.getNoteY = function (line) {
+            return this.getLineY(this.stuffIndex, line);
         };
         StaffStringPainter.prototype.getLineY = function (staff, line) {
             return (staff + 1) * 14 * this.lineHeight - line * this.lineHeight;
@@ -640,14 +719,28 @@ var WebTones;
             _this.timeSec = instrument.getCurrentTimeSec();
             return _this;
         }
-        StaffStringPlayer.prototype.processNote = function (timeSec, note, noteDiv) {
-            // todo implement tempo
-            var durationSec = 3 / noteDiv;
-            return this.instrument.playNote(this.timeSec + timeSec, note, durationSec);
+        StaffStringPlayer.prototype.processSymbols = function () {
+            for (var _i = 0, _a = this.symbols; _i < _a.length; _i++) {
+                var symbol = _a[_i];
+                if (symbol.chordFirst) {
+                    this.cordStartTimeSec = this.timeSec;
+                    this.cordEndTimeSec = this.timeSec;
+                }
+                if (symbol.seqFirst)
+                    this.timeSec = this.cordStartTimeSec;
+                this.processNote(symbol);
+                if (symbol.seqLast)
+                    this.cordEndTimeSec = Math.max(this.cordEndTimeSec, this.timeSec);
+                if (symbol.chordLast)
+                    this.timeSec = this.cordEndTimeSec;
+                if (symbol.chordLast)
+                    this.timeSec += 0.01;
+            }
         };
-        StaffStringPlayer.prototype.processSpace = function () {
+        StaffStringPlayer.prototype.processNote = function (symbol) {
             // todo implement tempo
-            return 0.01;
+            var durationSec = 3 / symbol.noteDiv;
+            this.timeSec += this.instrument.playNote(this.timeSec, symbol.noteName, durationSec);
         };
         return StaffStringPlayer;
     }(WebTones.StaffString));
