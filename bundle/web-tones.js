@@ -272,6 +272,8 @@ var __extends = (this && this.__extends) || (function () {
         return extendStatics(d, b);
     };
     return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
         extendStatics(d, b);
         function __() { this.constructor = d; }
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -321,6 +323,8 @@ var __extends = (this && this.__extends) || (function () {
         return extendStatics(d, b);
     };
     return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
         extendStatics(d, b);
         function __() { this.constructor = d; }
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -381,6 +385,8 @@ var __extends = (this && this.__extends) || (function () {
         return extendStatics(d, b);
     };
     return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
         extendStatics(d, b);
         function __() { this.constructor = d; }
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -459,6 +465,8 @@ var __extends = (this && this.__extends) || (function () {
         return extendStatics(d, b);
     };
     return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
         extendStatics(d, b);
         function __() { this.constructor = d; }
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -470,13 +478,15 @@ var WebTones;
         __extends(StaffStringPainter, _super);
         function StaffStringPainter(canvas) {
             var _this = _super.call(this) || this;
-            _this.stuffIndex = -1;
+            _this.staffIndex = -1;
             _this.noteSelected = false;
             _this.notesDrawn = 0;
             _this.noteWidth = 10;
             _this.noteWidth2 = _this.noteWidth / 2;
+            _this.noteWidth3 = _this.noteWidth / 3;
             _this.lineHeight = 10;
-            _this.flagLen = 2;
+            _this.flagLen = 3;
+            _this.noteFont = "bold 20px serif";
             _this.CodeA = 'a'.charCodeAt(0);
             _this.CodeC = 'c'.charCodeAt(0);
             _this.Code4 = '4'.charCodeAt(0);
@@ -488,7 +498,16 @@ var WebTones;
             _this.context.clearRect(0, 0, _this.canvas.width, _this.canvas.height);
             return _this;
         }
+        StaffStringPainter.prototype.getWidth = function () {
+            return this.width;
+        };
+        StaffStringPainter.prototype.getHeight = function () {
+            return this.height;
+        };
         StaffStringPainter.prototype.processSymbols = function () {
+            this.staffIndex = -1;
+            this.width = 0;
+            this.height = 0;
             for (var index = 0; index < this.symbols.length; index++) {
                 var symbol = this.symbols[index];
                 if (symbol.chordFirst) {
@@ -509,8 +528,8 @@ var WebTones;
             }
         };
         StaffStringPainter.prototype.processNote = function (index) {
-            if (this.stuffIndex < 0) {
-                this.stuffIndex = 0;
+            if (this.staffIndex < 0) {
+                this.staffIndex = 0;
                 this.drawStaff();
             }
             var symbol = this.symbols[index];
@@ -521,10 +540,7 @@ var WebTones;
             }
             else if (symbol.noteName == '||') {
                 this.drawWall();
-                this.stuffIndex++;
-                this.notesDrawn = 0;
-                this.notesDrawnCordStart = 0;
-                this.notesDrawnCordEnd = 0;
+                this.gotoNextStaff();
                 this.drawStaff();
                 return index;
             }
@@ -552,55 +568,28 @@ var WebTones;
         StaffStringPainter.prototype.drawStaff = function () {
             var width = this.canvas.width;
             for (var line = 0; line < 5; line++) {
-                var y1 = this.getLineY(this.stuffIndex, line);
+                var y1 = this.getLineY(this.staffIndex, line);
                 this.drawLine(this.LineColor, 0, y1, width, y1);
-                var y2 = this.getLineY(this.stuffIndex, line - 6);
+                var y2 = this.getLineY(this.staffIndex, line - 6);
                 this.drawLine(this.LineColor, 0, y2, width, y2);
             }
         };
-        StaffStringPainter.prototype.drawMultiNotes = function (index, index2) {
-            var symbol = this.symbols[index];
-            var symbol2 = this.symbols[index2];
+        StaffStringPainter.prototype.drawMultiNotes = function (index1, index2) {
+            var flagDir = this.getFlagDirMore(index1, index2);
             var noteX1 = this.getCurrentX();
             var noteX2 = this.getCurrentX();
-            var dirP = 0;
-            var dirN = 0;
-            for (var i = index; i <= index2; i++) {
-                var symbolX = this.symbols[i];
-                var lineX = this.getNoteLine(symbolX.noteName);
-                if (this.getFlagDir(lineX) > 0)
-                    dirP++;
-                else
-                    dirN++;
-            }
-            var flagDir = dirP >= dirN ? 1 : -1;
-            for (var i = index; i <= index2; i++) {
-                noteX2 = this.getCurrentX();
-                this.drawNote(i, flagDir);
+            for (var i = index1; i <= index2; i++) {
+                noteX2 = this.drawNote(i, flagDir);
                 this.notesDrawn += 1.0;
             }
-            var dashes = this.getNoteDashes(symbol.noteDiv);
-            var line1 = this.getNoteLine(symbol.noteName);
-            var line2 = this.getNoteLine(symbol2.noteName);
-            var dir1 = this.getFlagDir(line1);
-            var dir2 = this.getFlagDir(line2);
-            var fx1 = this.getFlagX(noteX1, flagDir);
-            var fy1 = this.getFlagY(line1, flagDir);
-            var fx2 = this.getFlagX(noteX2, flagDir);
-            var fy2 = this.getFlagY(line2, flagDir);
-            for (var i = 0; i < dashes; i++) {
-                this.context.beginPath();
-                this.context.moveTo(fx1, fy1 + dir1 * i * this.noteWidth2);
-                this.context.lineTo(fx2, fy2 + dir2 * i * this.noteWidth2);
-                this.context.stroke();
-            }
+            this.drawMultiDashes(index1, index2, noteX1, noteX2, flagDir);
         };
         StaffStringPainter.prototype.drawSingleNote = function (index) {
             var symbol = this.symbols[index];
             var line = this.getNoteLine(symbol.noteName);
             var flagDir = this.getFlagDir(line);
-            this.drawNote(index, flagDir);
-            this.drawDashes(line, symbol.noteDiv, flagDir);
+            var noteX = this.drawNote(index, flagDir);
+            this.drawDashes(line, symbol.noteDiv, noteX, flagDir);
             this.notesDrawn += 1.0;
         };
         StaffStringPainter.prototype.drawNote = function (index, flagDir) {
@@ -608,10 +597,16 @@ var WebTones;
             var line = this.getNoteLine(symbol.noteName);
             var noteX = this.getCurrentX();
             var noteY = this.getNoteY(line);
+            if (symbol.noteName.indexOf('#') > -1)
+                this.drawNoteSharp(noteX, noteY);
+            else if (symbol.noteName.indexOf('@') > -1)
+                this.drawNoteFlat(noteX, noteY);
+            noteX = this.getCurrentX();
             this.drawMiniLines(line, noteX);
             this.drawNoteSelection(noteX, noteY);
             this.drawElipse(noteX, noteY, symbol.noteDiv > 2);
             this.drawFlagPost(line, symbol.noteDiv, flagDir, noteX, noteY);
+            return noteX;
         };
         StaffStringPainter.prototype.drawMiniLine = function (line, x) {
             var y = this.getNoteY(line);
@@ -620,6 +615,16 @@ var WebTones;
             this.context.lineTo(x + this.noteWidth, y);
             this.context.strokeStyle = this.NoteColor;
             this.context.stroke();
+        };
+        StaffStringPainter.prototype.drawNoteSharp = function (noteX, noteY) {
+            this.context.font = this.noteFont;
+            this.context.fillText("♯", noteX, noteY + this.noteWidth2);
+            this.notesDrawn += 1.0;
+        };
+        StaffStringPainter.prototype.drawNoteFlat = function (noteX, noteY) {
+            this.context.font = this.noteFont;
+            this.context.strokeText("♭", noteX, noteY + this.noteWidth2);
+            this.notesDrawn += 1.0;
         };
         StaffStringPainter.prototype.drawMiniLines = function (line, noteX) {
             if (line == -1)
@@ -652,18 +657,41 @@ var WebTones;
                 this.context.stroke();
             }
         };
-        StaffStringPainter.prototype.drawDashes = function (line, noteDiv, flagDir) {
-            var noteX = this.getCurrentX();
+        StaffStringPainter.prototype.drawDashes = function (line, noteDiv, noteX, flagDir) {
             var flagX = this.getFlagX(noteX, flagDir);
             var flagY = this.getFlagY(line, flagDir);
             var dashes = this.getNoteDashes(noteDiv);
             this.context.beginPath();
             for (var i = 0; i < dashes; i++) {
-                this.context.moveTo(flagX, flagY + flagDir * i * this.noteWidth2);
-                this.context.lineTo(flagX + this.noteWidth, flagY + flagDir * i * this.noteWidth2 + flagDir * this.noteWidth2 / 2);
+                var dx1 = flagX;
+                var dy1 = flagY + i * flagDir * this.noteWidth;
+                var dx2 = dx1 + this.noteWidth * 2 / 3;
+                var dy2 = dy1 + flagDir * this.noteWidth * 3 / 2;
+                var dx3 = dx2 - this.noteWidth / 5;
+                var dy3 = dy2 + flagDir * this.noteWidth;
+                this.context.moveTo(dx1, dy1);
+                this.context.lineTo(dx2, dy2);
+                this.context.lineTo(dx3, dy3);
             }
             this.context.strokeStyle = this.NoteColor;
             this.context.stroke();
+        };
+        StaffStringPainter.prototype.drawMultiDashes = function (index1, index2, noteX1, noteX2, flagDir) {
+            var symbol1 = this.symbols[index1];
+            var symbol2 = this.symbols[index2];
+            var dashes = this.getNoteDashes(symbol1.noteDiv);
+            var line1 = this.getNoteLine(symbol1.noteName);
+            var line2 = this.getNoteLine(symbol2.noteName);
+            var fx1 = this.getFlagX(noteX1, flagDir);
+            var fy1 = this.getFlagY(line1, flagDir);
+            var fx2 = this.getFlagX(noteX2, flagDir);
+            var fy2 = this.getFlagY(line2, flagDir);
+            for (var i = 0; i < dashes; i++) {
+                this.context.beginPath();
+                this.context.moveTo(fx1, fy1 + i * flagDir * this.noteWidth2);
+                this.context.lineTo(fx2, fy2 + i * flagDir * this.noteWidth2);
+                this.context.stroke();
+            }
         };
         StaffStringPainter.prototype.drawNoteSelection = function (noteX, noteY) {
             if (this.noteSelected) {
@@ -690,6 +718,13 @@ var WebTones;
             this.context.strokeStyle = style;
             this.context.stroke();
         };
+        StaffStringPainter.prototype.gotoNextStaff = function () {
+            this.width = Math.max(this.width, this.getCurrentX());
+            this.staffIndex++;
+            this.notesDrawn = 0;
+            this.notesDrawnCordStart = 0;
+            this.notesDrawnCordEnd = 0;
+        };
         StaffStringPainter.prototype.findSeqLast = function (index) {
             for (var i = index + 1; i < this.symbols.length; i++)
                 if (this.symbols[i].seqLast)
@@ -711,10 +746,23 @@ var WebTones;
             return this.noteWidth + this.notesDrawn * this.noteWidth * 1.5;
         };
         StaffStringPainter.prototype.getNoteY = function (line) {
-            return this.getLineY(this.stuffIndex, line);
+            return this.getLineY(this.staffIndex, line);
         };
         StaffStringPainter.prototype.getLineY = function (staff, line) {
-            return (staff + 1) * 14 * this.lineHeight - line * this.lineHeight;
+            return (staff + 1) * 16 * this.lineHeight - line * this.lineHeight;
+        };
+        StaffStringPainter.prototype.getFlagDirMore = function (index1, index2) {
+            var dirP = 0;
+            var dirN = 0;
+            for (var i = index1; i <= index2; i++) {
+                var symbolX = this.symbols[i];
+                var lineX = this.getNoteLine(symbolX.noteName);
+                if (this.getFlagDir(lineX) > 0)
+                    dirP++;
+                else
+                    dirN++;
+            }
+            return dirP >= dirN ? 1 : -1;
         };
         StaffStringPainter.prototype.getFlagDir = function (line) {
             return line > -1 && line < 3 ? 1 : -1;
@@ -737,6 +785,8 @@ var __extends = (this && this.__extends) || (function () {
         return extendStatics(d, b);
     };
     return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
         extendStatics(d, b);
         function __() { this.constructor = d; }
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
