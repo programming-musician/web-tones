@@ -1,0 +1,57 @@
+body {
+    width: calc(100vw - 2em);
+    height: calc(100vh - 2em);
+    margin: 1em;
+    overflow: hidden scroll;
+    background-color: lightgray;
+    text-align: center;
+}
+
+.tile {
+    display: inline-block;
+    border: 1px solid black;
+    border-radius: 5px;
+    background-color: white;
+    text-align: center;
+}
+
+.tile.medium {
+    max-width: 30%;
+    max-height: 30%;
+    padding: 5em;
+}
+
+.tile.large {
+    min-width: 60vw;
+    max-width: 90vw;
+    min-height: 60vh;
+    max-height: 90vh;
+    padding: 5em;
+    overflow: scroll;
+}
+
+.wide {
+    display: block;
+    width: 90%;
+}
+
+button.play {
+    margin: 0.4em;
+}
+
+textarea.staff {
+    width: 90%;
+    height: 40%;
+    resize: vertical;
+    border: 1px solid black;
+}
+
+div.staff {
+    width: 90%;
+    height: 50%;
+    resize: vertical;
+    display: inline-block;
+    background-color: white;
+    border: 1px solid black;
+    overflow: hidden scroll;
+}

@@ -3,7 +3,7 @@
 
 <head>
 	<meta charset="UTF-8">
-	<link rel="stylesheet" href="example.css">
+	<link rel="stylesheet" href="example-piano.css">
 	<script type="text/javascript" src="./web-tones.js"></script>
 	<script type="text/javascript" src="./example-piano.js"></script>
 	<script type="text/javascript">
@@ -18,13 +18,12 @@
 </head>
 
 <body>
-	<div class="tile large">
-		<textarea id="number_input" class="wide"></textarea>
-		<button id="play_button">Play music</button>
-		<br />
-		<div>
-			<canvas id="staff_output" class="" width="800" height="1200"></canvas>
-		</div>
+	<textarea id="number_input" class="staff"></textarea>
+	<br />
+	<button id="play_button">Play music</button>
+	<br />
+	<div class="staff">
+		<canvas id="staff_output" class="staff" width="800" height="600"></canvas>
 	</div>
 	<div id="console"></div>
 </body>

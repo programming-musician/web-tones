@@ -3,11 +3,14 @@ html {
 }
 
 body {
+    width: calc(100vw - 2em);
+    height: calc(100vh - 2em);
+    margin: 1em;
     background-color: lightgray;
     text-align: center;
 }
 
-div.tile {
+.tile {
     display: inline-block;
     border: 1px solid black;
     border-radius: 5px;
@@ -15,13 +18,13 @@ div.tile {
     text-align: center;
 }
 
-div.tile.medium {
+.tile.medium {
     max-width: 30%;
     max-height: 30%;
     padding: 5em;
 }
 
-div.tile.large {
+.tile.large {
     min-width: 60vw;
     max-width: 90vw;
     min-height: 60vh;
