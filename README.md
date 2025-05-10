@@ -33,7 +33,7 @@ See interactive example [here](https://programming-musician.github.io/web-tones/
 ```
 var piano = new WebTones.Piano(simpleConsole);
 var staffPlayer = new WebTones.StaffStringPlayer(piano);
-staffPlayer.process('e5/16,d#5/16 | e5/16,d#5/16,e5/16,b4/16,d5/16,c5/16');
+staffPlayer.process('e5/16,#d5/16 | e5/16,#d5/16,e5/16,b4/16,d5/16,c5/16');
 ```
 ### Drawing music notes to canvas
 ```
@@ -43,5 +43,5 @@ staffPainter.process('e5/16,d#5/16 | e5/16,d#5/16,e5/16,b4/16,d5/16,c5/16');
 
 ## 📻 Theremin
 ```
-// todo
+Comming soon.
 ```
