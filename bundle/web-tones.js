@@ -404,7 +404,7 @@ var WebTones;
 (function (WebTones) {
     var StaffString = /** @class */ (function () {
         function StaffString() {
-            this.SymbolRe = /^(\|)|(\$)|([#@]?[a-g]\d\/\d{1,2})$/;
+            this.SymbolRe = /(^[|$]$)|(^[#@]?[a-g]\d\/\d{1,2}$)/;
         }
         StaffString.prototype.setCarret = function (carret) {
             this.carret = carret;
@@ -422,21 +422,14 @@ var WebTones;
                     for (var s = 0; s < subNotes.length; s++) {
                         totalChars += s > 0 ? 1 : 0;
                         if (subNotes[s].length > 0) {
-                            if (this.SymbolRe.test(subNotes[s])) {
-                                var symbol = this.createSymbol(subNotes[s]);
-                                symbol.chordFirst = n == 0 && s == 0;
-                                symbol.chordLast = n == notes.length - 1 && s == subNotes.length - 1;
-                                symbol.seqFirst = s == 0;
-                                symbol.seqLast = s == subNotes.length - 1;
-                                symbol.posBegin = totalChars;
-                                symbol.posEnd = totalChars + subNotes[s].length;
-                                this.symbols.push(symbol);
-                                totalChars = symbol.posEnd;
-                            }
-                            else {
-                                console.warn("Unknown symbol: " + subNotes[s]);
-                                totalChars = totalChars + subNotes[s].length;
-                            }
+                            var symbol = this.createSymbol(subNotes[s]);
+                            symbol.chordFirst = n == 0 && s == 0;
+                            symbol.chordLast = n == notes.length - 1 && s == subNotes.length - 1;
+                            symbol.seqFirst = s == 0;
+                            symbol.seqLast = s == subNotes.length - 1;
+                            symbol.posBegin = totalChars;
+                            symbol.posEnd = totalChars = totalChars + subNotes[s].length;
+                            this.symbols.push(symbol);
                         }
                     }
                 }
@@ -445,9 +438,14 @@ var WebTones;
         };
         StaffString.prototype.createSymbol = function (noteName) {
             var symbol = new StaffSymbol();
-            var parts = noteName.trim().split('/');
-            symbol.noteName = parts[0];
-            symbol.noteDiv = parts.length == 2 ? new Number(parts[1]).valueOf() : 1;
+            if (noteName.match(this.SymbolRe)) {
+                var parts = noteName.split('/');
+                symbol.noteName = parts[0];
+                symbol.noteDiv = parts.length == 2 ? new Number(parts[1]).valueOf() : 1;
+            }
+            else {
+                symbol.error = true;
+            }
             return symbol;
         };
         return StaffString;
@@ -495,6 +493,7 @@ var WebTones;
             _this.CodeC = 'c'.charCodeAt(0);
             _this.Code4 = '4'.charCodeAt(0);
             _this.LineColor = 'darkgray';
+            _this.ErrorColor = 'red';
             _this.WallColor = 'black';
             _this.NoteColor = 'black';
             _this.SelectionColor = 'red';
@@ -536,7 +535,11 @@ var WebTones;
             if (this.notesDrawn == 0)
                 this.drawStaff();
             var symbol = this.symbols[index];
-            if (symbol.noteName == '|' || symbol.noteName == '$') {
+            if (symbol.error) {
+                this.drawError();
+                return index;
+            }
+            else if (symbol.noteName == '|' || symbol.noteName == '$') {
                 this.drawWall();
                 return index;
             }
@@ -560,6 +563,15 @@ var WebTones;
                 var y2 = this.getLineY(this.staffIndex, line - 6);
                 this.drawLine(this.LineColor, 0, y2, width, y2);
             }
+        };
+        StaffStringPainter.prototype.drawError = function () {
+            var x = this.getCurrentX();
+            var y1 = this.getNoteY(3);
+            var y2 = this.getNoteY(-5);
+            this.context.beginPath();
+            this.drawLine(this.ErrorColor, x, y1, x, y2);
+            this.context.stroke();
+            this.notesDrawn += 0.5;
         };
         StaffStringPainter.prototype.drawWall = function () {
             var x = this.getCurrentX();
@@ -596,24 +608,30 @@ var WebTones;
         };
         StaffStringPainter.prototype.drawNote = function (index, flagDir) {
             var symbol = this.symbols[index];
-            var noteX = this.getCurrentX();
-            var line = this.getNoteLine(symbol.noteName);
-            if (line != null) {
-                var noteY = this.getNoteY(line);
-                if (symbol.noteName.indexOf('#') > -1)
-                    this.drawNoteSharp(noteX, noteY);
-                else if (symbol.noteName.indexOf('@') > -1)
-                    this.drawNoteFlat(noteX, noteY);
-                noteX = this.getCurrentX();
-                if (this.carret >= symbol.posBegin && this.carret <= symbol.posEnd)
-                    this.drawNoteSelection(noteX, noteY);
-                this.drawMiniLines(line, noteX);
-                this.drawElipse(noteX, noteY, symbol.noteDiv > 2);
-                this.drawFlagPost(line, symbol.noteDiv, flagDir, noteX, noteY);
-                this.updateWidth(noteX);
-                this.updateHeight(noteY);
+            if (!symbol.error) {
+                var noteX = this.getCurrentX();
+                var line = this.getNoteLine(symbol.noteName);
+                if (line != null) {
+                    var noteY = this.getNoteY(line);
+                    if (symbol.noteName.indexOf('#') > -1)
+                        this.drawNoteMark('♯', noteX, noteY);
+                    else if (symbol.noteName.indexOf('@') > -1)
+                        this.drawNoteMark('♭', noteX, noteY);
+                    noteX = this.getCurrentX();
+                    if (this.carret >= symbol.posBegin && this.carret <= symbol.posEnd)
+                        this.drawNoteSelection(noteX, noteY);
+                    this.drawMiniLines(line, noteX);
+                    this.drawElipse(noteX, noteY, symbol.noteDiv > 2);
+                    this.drawFlagPost(line, symbol.noteDiv, flagDir, noteX, noteY);
+                    this.updateWidth(noteX);
+                    this.updateHeight(noteY);
+                }
+                return noteX;
             }
-            return noteX;
+            else {
+                this.drawError();
+                return this.getCurrentX();
+            }
         };
         StaffStringPainter.prototype.drawMiniLine = function (line, x) {
             var y = this.getNoteY(line);
@@ -623,14 +641,10 @@ var WebTones;
             this.context.strokeStyle = this.NoteColor;
             this.context.stroke();
         };
-        StaffStringPainter.prototype.drawNoteSharp = function (noteX, noteY) {
+        StaffStringPainter.prototype.drawNoteMark = function (mark, noteX, noteY) {
             this.context.font = this.noteFont;
-            this.context.fillText("♯", noteX, noteY + this.noteWidth2);
-            this.notesDrawn += 1.0;
-        };
-        StaffStringPainter.prototype.drawNoteFlat = function (noteX, noteY) {
-            this.context.font = this.noteFont;
-            this.context.strokeText("♭", noteX, noteY + this.noteWidth2);
+            this.context.fillStyle = this.NoteColor;
+            this.context.fillText(mark, noteX, noteY + this.noteWidth2);
             this.notesDrawn += 1.0;
         };
         StaffStringPainter.prototype.drawMiniLines = function (line, noteX) {
@@ -689,11 +703,12 @@ var WebTones;
             var dashes = this.getNoteDashes(symbol1.noteDiv);
             var line1 = this.getNoteLine(symbol1.noteName);
             var line2 = this.getNoteLine(symbol2.noteName);
-            if (line1 && line2) {
+            if (line1 != null && line2 != null) {
                 var fx1 = this.getFlagX(noteX1, flagDir);
                 var fy1 = this.getFlagY(line1, flagDir);
                 var fx2 = this.getFlagX(noteX2, flagDir);
                 var fy2 = this.getFlagY(line2, flagDir);
+                this.context.strokeStyle = this.NoteColor;
                 for (var i = 0; i < dashes; i++) {
                     this.context.beginPath();
                     this.context.moveTo(fx1, fy1 + i * flagDir * this.noteWidth2);
@@ -725,7 +740,9 @@ var WebTones;
         };
         StaffStringPainter.prototype.findSeqLast = function (index) {
             for (var i = index + 1; i < this.symbols.length; i++)
-                if (this.symbols[i].seqLast)
+                if (this.symbols[i].error || this.symbols[index].noteDiv != this.symbols[i].noteDiv)
+                    return index != i - 1 ? i - 1 : -1;
+                else if (this.symbols[i].seqLast)
                     return i;
             return -1;
         };
@@ -828,9 +845,13 @@ var WebTones;
             }
         };
         StaffStringPlayer.prototype.processNote = function (symbol) {
-            // todo implement tempo
-            var durationSec = 3 / symbol.noteDiv;
-            this.timeSec += this.instrument.playNote(this.timeSec, symbol.noteName, durationSec);
+            if (!symbol.error) {
+                // todo implement tempo
+                var durationSec = 3 / symbol.noteDiv;
+                this.timeSec += this.instrument.playNote(this.timeSec, symbol.noteName, durationSec);
+            }
+            else
+                this.timeSec += this.instrument.playNote(this.timeSec, 'a2', 0.5);
         };
         return StaffStringPlayer;
     }(WebTones.StaffString));

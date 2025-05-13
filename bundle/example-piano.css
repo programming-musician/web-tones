@@ -44,6 +44,7 @@ textarea.staff {
     height: 40%;
     resize: vertical;
     border: 1px solid black;
+    text-align: center;
 }
 
 div.staff {
