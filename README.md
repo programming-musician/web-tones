@@ -1,8 +1,8 @@
 # Installation
 Include /bundle/web-tones.js in your page. It can be downloaded using jsDelivr CDN: \
-Newest version: \
-https://cdn.jsdelivr.net/gh/programming-musician/web-tones/bundle/web-tones.js \
-Specific version: \
+Latset release: \
+https://cdn.jsdelivr.net/gh/programming-musician/web-tones@latest/bundle/web-tones.js \
+Specific relsease: \
 https://cdn.jsdelivr.net/gh/programming-musician/web-tones@0.0.2/bundle/web-tones.js \
 HTML script tag can be used:
 ```
