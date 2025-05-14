@@ -21,7 +21,6 @@ Instruments like PhoneDialPad or Piano should be created during user initiated a
 Class emulating phone dial pad with standard ([wiki](https://en.wikipedia.org/wiki/Telephone_keypad)).
 See interactive example [here](https://programming-musician.github.io/web-tones/bundle/example-dialpad.html). \
 ![Example](https://programming-musician.github.io/web-tones/bundle/example-dialpad.png)
-
 ### Playing simple phone number
 ```
 var dialPad = new WebTones.DialPad();
