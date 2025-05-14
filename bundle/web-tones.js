@@ -406,8 +406,9 @@ var WebTones;
         function StaffString() {
             this.SymbolRe = /(^[|$]$)|(^[#@]?[a-g]\d\/\d{1,2}$)/;
         }
-        StaffString.prototype.setCarret = function (carret) {
-            this.carret = carret;
+        StaffString.prototype.setSelection = function (selectionBegin, selectionEnd) {
+            this.selectionBegin = selectionBegin;
+            this.selectionEnd = selectionEnd;
         };
         StaffString.prototype.process = function (music) {
             this.symbols = [];
@@ -618,7 +619,7 @@ var WebTones;
                     else if (symbol.noteName.indexOf('@') > -1)
                         this.drawNoteMark('♭', noteX, noteY);
                     noteX = this.getCurrentX();
-                    if (this.carret >= symbol.posBegin && this.carret <= symbol.posEnd)
+                    if (symbol.posBegin >= this.selectionBegin && symbol.posEnd <= this.selectionEnd)
                         this.drawNoteSelection(noteX, noteY);
                     this.drawMiniLines(line, noteX);
                     this.drawElipse(noteX, noteY, symbol.noteDiv > 2);
@@ -826,22 +827,47 @@ var WebTones;
             _this.timeSec = instrument.getCurrentTimeSec();
             return _this;
         }
+        StaffStringPlayer.prototype.setAsyncSchedule = function (asyncSchedule) {
+            this.asyncSchedule = asyncSchedule;
+        };
+        StaffStringPlayer.prototype.setSymbolReceiver = function (symbolReceiver) {
+            this.symbolReceiver = symbolReceiver;
+        };
         StaffStringPlayer.prototype.processSymbols = function () {
-            for (var _i = 0, _a = this.symbols; _i < _a.length; _i++) {
-                var symbol = _a[_i];
+            this.processSymbolsFrom(0);
+        };
+        StaffStringPlayer.prototype.processSymbolsFrom = function (beginIndex) {
+            var _this = this;
+            var startTimeSec = this.timeSec;
+            var _loop_1 = function (index) {
+                var symbol = this_1.symbols[index];
                 if (symbol.chordFirst) {
-                    this.cordStartTimeSec = this.timeSec;
-                    this.cordEndTimeSec = this.timeSec;
+                    this_1.cordStartTimeSec = this_1.timeSec;
+                    this_1.cordEndTimeSec = this_1.timeSec;
                 }
                 if (symbol.seqFirst)
-                    this.timeSec = this.cordStartTimeSec;
-                this.processNote(symbol);
+                    this_1.timeSec = this_1.cordStartTimeSec;
+                if (this_1.symbolReceiver)
+                    this_1.symbolReceiver(symbol);
+                this_1.processNote(symbol);
                 if (symbol.seqLast)
-                    this.cordEndTimeSec = Math.max(this.cordEndTimeSec, this.timeSec);
+                    this_1.cordEndTimeSec = Math.max(this_1.cordEndTimeSec, this_1.timeSec);
                 if (symbol.chordLast)
-                    this.timeSec = this.cordEndTimeSec;
-                if (symbol.chordLast)
-                    this.timeSec += 0.01;
+                    this_1.timeSec = this_1.cordEndTimeSec;
+                if (symbol.chordLast) {
+                    this_1.timeSec += 0.01;
+                    if (this_1.asyncSchedule) {
+                        var delayMs = (this_1.timeSec - this_1.instrument.getCurrentTimeSec()) * 1000 - StaffStringPlayer.PerformanceMs;
+                        setTimeout(function () { return _this.processSymbolsFrom(index + 1); }, delayMs);
+                        return "break";
+                    }
+                }
+            };
+            var this_1 = this;
+            for (var index = beginIndex; index < this.symbols.length; index++) {
+                var state_1 = _loop_1(index);
+                if (state_1 === "break")
+                    break;
             }
         };
         StaffStringPlayer.prototype.processNote = function (symbol) {
@@ -853,6 +879,7 @@ var WebTones;
             else
                 this.timeSec += this.instrument.playNote(this.timeSec, 'a2', 0.5);
         };
+        StaffStringPlayer.PerformanceMs = 50;
         return StaffStringPlayer;
     }(WebTones.StaffString));
     WebTones.StaffStringPlayer = StaffStringPlayer;

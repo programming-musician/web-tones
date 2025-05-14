@@ -1,14 +1,20 @@
 var simpleConsole;
 var piano;
-var examplePlayMusic = function (id) {
+var examplePlayMusic = function (inputId) {
     if (!simpleConsole)
         simpleConsole = new WebTones.JavascriptConsole();
     if (!piano)
         piano = new WebTones.Piano(simpleConsole);
-    var input = document.getElementById(id);
+    var input = document.getElementById(inputId);
     if (input) {
         var staffPlayer = new WebTones.StaffStringPlayer(piano);
-        staffPlayer.setCarret(input.selectionStart);
+        staffPlayer.setAsyncSchedule(true);
+        staffPlayer.setSymbolReceiver(function (symbol) {
+            if (symbol.chordFirst)
+                input.selectionStart = symbol.posBegin;
+            if (symbol.chordLast)
+                input.selectionEnd = symbol.posEnd;
+        });
         staffPlayer.process(input.value);
     }
 };
@@ -16,7 +22,7 @@ var exampleDrawMusic = function (inputId, outputId) {
     var input = document.getElementById(inputId);
     var output = document.getElementById(outputId);
     var staffPainter = new WebTones.StaffStringPainter(output);
-    staffPainter.setCarret(input.selectionStart);
+    staffPainter.setSelection(input.selectionStart, input.selectionEnd);
     staffPainter.process(input.value);
     output.width = staffPainter.getWidth();
     output.height = staffPainter.getHeight();
