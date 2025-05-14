@@ -19,7 +19,9 @@ Instruments like PhoneDialPad or Piano should be created during user initiated a
 
 ## 📞 Dial Pad
 Class emulating phone dial pad with standard ([wiki](https://en.wikipedia.org/wiki/Telephone_keypad)).
-See interactive example [here](https://programming-musician.github.io/web-tones/bundle/example-dialpad.html).
+See interactive example [here](https://programming-musician.github.io/web-tones/bundle/example-dialpad.html). \
+![Example](https://programming-musician.github.io/web-tones/bundle/example-dialpad.png)
+
 ### Playing simple phone number
 ```
 var dialPad = new WebTones.DialPad();
@@ -29,7 +31,7 @@ dialPad.playPhoneNumber('123-456-789');
 ## 🎹 Piano
 Class emulating 88 keys piano with standard frequencies ([wiki](https://en.wikipedia.org/wiki/Piano_key_frequencies)).
 See interactive example [here](https://programming-musician.github.io/web-tones/bundle/example-piano.html). \
-![AAA](https://programming-musician.github.io/web-tones/bundle/example-piano.png)
+![Example](https://programming-musician.github.io/web-tones/bundle/example-piano.png)
 ### Playing simple music
 ```
 var piano = new WebTones.Piano(simpleConsole);
