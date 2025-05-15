@@ -3,7 +3,7 @@ var WebTones;
     var AudioPlayer = /** @class */ (function () {
         function AudioPlayer() {
             this.audioIsRunning = false;
-            this.ZeroLevel = 0.0001;
+            this.ZeroLevel = 0.000001;
             this.DefaultFrequency = 500;
         }
         AudioPlayer.prototype.initFrontStereoPlayer = function (otherAudio) {
@@ -838,7 +838,8 @@ var WebTones;
         };
         StaffStringPlayer.prototype.processSymbolsFrom = function (beginIndex) {
             var _this = this;
-            var startTimeSec = this.timeSec;
+            if (this.asyncSchedule)
+                this.timeSec = this.instrument.getCurrentTimeSec() + StaffStringPlayer.AsyncOverlapSec;
             var _loop_1 = function (index) {
                 var symbol = this_1.symbols[index];
                 if (symbol.chordFirst) {
@@ -852,15 +853,13 @@ var WebTones;
                 this_1.processNote(symbol);
                 if (symbol.seqLast)
                     this_1.cordEndTimeSec = Math.max(this_1.cordEndTimeSec, this_1.timeSec);
+                // todo remove
                 if (symbol.chordLast)
-                    this_1.timeSec = this_1.cordEndTimeSec;
-                if (symbol.chordLast) {
-                    this_1.timeSec += 0.01;
-                    if (this_1.asyncSchedule) {
-                        var delayMs = (this_1.timeSec - this_1.instrument.getCurrentTimeSec()) * 1000 - StaffStringPlayer.PerformanceMs;
-                        setTimeout(function () { return _this.processSymbolsFrom(index + 1); }, delayMs);
-                        return "break";
-                    }
+                    this_1.timeSec = this_1.cordEndTimeSec + 0.01;
+                if (symbol.chordLast && this_1.asyncSchedule) {
+                    var delaySec = this_1.timeSec - this_1.instrument.getCurrentTimeSec() - StaffStringPlayer.AsyncOverlapSec;
+                    setTimeout(function () { return _this.processSymbolsFrom(index + 1); }, Math.max(0, delaySec * 1000));
+                    return "break";
                 }
             };
             var this_1 = this;
@@ -879,7 +878,7 @@ var WebTones;
             else
                 this.timeSec += this.instrument.playNote(this.timeSec, 'a2', 0.5);
         };
-        StaffStringPlayer.PerformanceMs = 50;
+        StaffStringPlayer.AsyncOverlapSec = 0.1;
         return StaffStringPlayer;
     }(WebTones.StaffString));
     WebTones.StaffStringPlayer = StaffStringPlayer;

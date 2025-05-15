@@ -1,9 +1,9 @@
 # Installation
 Include /bundle/web-tones.js in your page. It can be downloaded using jsDelivr CDN: \
-Latset release: \
+Latest release: \
 https://cdn.jsdelivr.net/gh/programming-musician/web-tones@latest/bundle/web-tones.js \
 Specific relsease: \
-https://cdn.jsdelivr.net/gh/programming-musician/web-tones@0.0.2/bundle/web-tones.js \
+https://cdn.jsdelivr.net/gh/programming-musician/web-tones@0.0.5/bundle/web-tones.js \
 HTML script tag can be used:
 ```
 <script type="text/javascript" src="./web-tones.js"></script>
@@ -18,7 +18,7 @@ Instruments like PhoneDialPad or Piano should be created during user initiated a
 # Examples
 
 ## 📞 Dial Pad
-Class emulating phone dial pad with standard ([wiki](https://en.wikipedia.org/wiki/Telephone_keypad)).
+Class emulating phone dial pad with 12 keys with standard frequencies ([wiki](https://en.wikipedia.org/wiki/Telephone_keypad)).
 See interactive example [here](https://programming-musician.github.io/web-tones/bundle/example-dialpad.html). \
 ![Example](https://programming-musician.github.io/web-tones/bundle/example-dialpad.png)
 ### Playing simple phone number
@@ -28,7 +28,7 @@ dialPad.playPhoneNumber('123-456-789');
 ```
 
 ## 🎹 Piano
-Class emulating 88 keys piano with standard frequencies ([wiki](https://en.wikipedia.org/wiki/Piano_key_frequencies)).
+Class emulating piano with 88 keys with standard frequencies ([wiki](https://en.wikipedia.org/wiki/Piano_key_frequencies)).
 See interactive example [here](https://programming-musician.github.io/web-tones/bundle/example-piano.html). \
 ![Example](https://programming-musician.github.io/web-tones/bundle/example-piano.png)
 ### Playing simple music
