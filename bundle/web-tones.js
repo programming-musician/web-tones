@@ -140,28 +140,31 @@ var WebTones;
             return this.audioPlayer.getMaxTimeSec();
         };
         TonesPlayer.prototype.setVolumes = function (volumes) {
-            this.volumes = volumes.slice();
+            if (this.volumes.length == volumes.length)
+                this.volumes = volumes.slice();
+            else
+                this.console.error("Wrong size of volumes.");
         };
         TonesPlayer.prototype.playTone = function (timeSec, frequency, rampUpSec, rampDownSec) {
-            var up2Sec = timeSec + rampUpSec / 2;
-            var upSec = timeSec + rampUpSec;
-            var down2Sec = timeSec + rampUpSec + rampDownSec / 2;
-            var downSec = timeSec + rampUpSec + rampDownSec;
-            this.audioPlayer.setFrequencyChange(frequency, timeSec);
-            this.audioPlayer.setFrequencyChange(frequency, downSec);
-            this.audioPlayer.setGainChange(0, 0.0, timeSec);
-            this.audioPlayer.setGainChange(1, 0.0, timeSec);
-            this.audioPlayer.setGainChange(0, 0.75 * this.volumes[0], up2Sec);
-            this.audioPlayer.setGainChange(1, 0.75 * this.volumes[1], up2Sec);
-            this.audioPlayer.setGainChange(0, 1.0 * this.volumes[0], upSec);
-            this.audioPlayer.setGainChange(1, 1.0 * this.volumes[1], upSec);
-            this.audioPlayer.setGainChange(0, 0.3 * this.volumes[0], down2Sec);
-            this.audioPlayer.setGainChange(1, 0.3 * this.volumes[1], down2Sec);
-            this.audioPlayer.setGainChange(0, 0.0, downSec);
-            this.audioPlayer.setGainChange(1, 0.0, downSec);
+            this.setFrequencyChange(frequency, timeSec);
+            this.setFrequencyChange(frequency, timeSec + rampUpSec + rampDownSec);
+            this.setGainChange(0.0, timeSec);
+            this.setGainChange(0.7, timeSec + rampUpSec * 0.5);
+            this.setGainChange(1.0, timeSec + rampUpSec * 1.0);
+            this.setGainChange(0.5, timeSec + rampUpSec + rampDownSec * 0.15);
+            this.setGainChange(0.3, timeSec + rampUpSec + rampDownSec * 0.25);
+            this.setGainChange(0.2, timeSec + rampUpSec + rampDownSec * 0.75);
+            this.setGainChange(0.0, timeSec + rampUpSec + rampDownSec * 1.0);
         };
         TonesPlayer.prototype.muteNow = function (durationSec) {
             this.audioPlayer.muteNow(durationSec);
+        };
+        TonesPlayer.prototype.setFrequencyChange = function (level, timeSec) {
+            this.audioPlayer.setFrequencyChange(level, timeSec);
+        };
+        TonesPlayer.prototype.setGainChange = function (level, timeSec) {
+            this.audioPlayer.setGainChange(0, level * this.volumes[0], timeSec);
+            this.audioPlayer.setGainChange(1, level * this.volumes[1], timeSec);
         };
         return TonesPlayer;
     }());
@@ -209,6 +212,7 @@ var WebTones;
 (function (WebTones) {
     var Instrument = /** @class */ (function () {
         function Instrument(parallelSounds, console) {
+            this.playerIndex = 0;
             this.console = console;
             this.tonePlayers = new Array(parallelSounds);
             for (var i = 0; i < this.tonePlayers.length; i++) {
@@ -224,17 +228,26 @@ var WebTones;
                 tonePlayer.startAudio();
             }
         };
+        Instrument.prototype.getPlayersCount = function () {
+            return this.tonePlayers.length;
+        };
         Instrument.prototype.getCurrentTimeSec = function () {
             var tonePlayer = this.tonePlayers[0];
             return tonePlayer.getCurrentTimeSec();
         };
-        Instrument.prototype.getMaxTimeSec = function () {
-            var result = 0;
-            for (var _i = 0, _a = this.tonePlayers; _i < _a.length; _i++) {
-                var tonePlayer = _a[_i];
-                result = Math.max(result, tonePlayer.getMaxTimeSec());
+        Instrument.prototype.getMaxTimeSec = function (playerIndex) {
+            if (playerIndex != null) {
+                var tonePlayer = this.tonePlayers[playerIndex];
+                return tonePlayer.getMaxTimeSec();
             }
-            return result;
+            else {
+                var result = 0;
+                for (var _i = 0, _a = this.tonePlayers; _i < _a.length; _i++) {
+                    var tonePlayer = _a[_i];
+                    result = Math.max(result, tonePlayer.getMaxTimeSec());
+                }
+                return result;
+            }
         };
         Instrument.prototype.setVolumes = function (playerIndex, volumes) {
             if (playerIndex != null) {
@@ -259,6 +272,19 @@ var WebTones;
                 var tonePlayer = _a[_i];
                 tonePlayer.muteNow(durationSec);
             }
+        };
+        Instrument.prototype.fixPlayerIndex = function (timeSec) {
+            // todo use mod anyway and end after re-loop
+            for (var i = 0; i < this.tonePlayers.length; i++)
+                if (timeSec > this.tonePlayers[i].getMaxTimeSec()) {
+                    this.playerIndex = i;
+                    return;
+                }
+            var newTonePlayer = new WebTones.TonesPlayer(console, this.tonePlayers[0]);
+            newTonePlayer.startAudio();
+            this.tonePlayers.push(newTonePlayer);
+            this.playerIndex = this.tonePlayers.length - 1;
+            //this.playerIndex = ( this.playerIndex + 1 ) % this.tonePlayers.length;
         };
         return Instrument;
     }());
@@ -288,7 +314,7 @@ var WebTones;
         }
         DialPad.prototype.playPhoneNumber = function (phoneNumber) {
             this.muteNow(this.keyDurationSec / 2);
-            var timeSec = this.getMaxTimeSec();
+            var timeSec = this.getMaxTimeSec(null);
             for (var i = 0; i < phoneNumber.length; i++) {
                 var digit = phoneNumber.charAt(i);
                 timeSec += this.playNote(timeSec, digit, this.keyDurationSec);
@@ -331,33 +357,67 @@ var WebTones;
     var Piano = /** @class */ (function (_super) {
         __extends(Piano, _super);
         function Piano(console) {
-            var _this = _super.call(this, Piano.playersCount, console) || this;
-            _this.playerIndex = 0;
+            var _this = _super.call(this, Piano.initialPlayersCount, console) || this;
+            _this.useHarmonics = true;
+            _this.useStereoBalance = true;
+            _this.rampUpSec = 0.03;
+            _this.maxHarmonics = 16;
+            _this.minVolumeLevel = 0.01;
             return _this;
         }
+        Piano.prototype.setUseHarmonics = function (useHarmonics) {
+            this.useHarmonics = useHarmonics;
+        };
+        Piano.prototype.setUseStereoBalance = function (useStereoBalance) {
+            this.useStereoBalance = useStereoBalance;
+        };
         Piano.prototype.playNote = function (timeSec, note, durationSec) {
-            var playerIndex = this.chooseNextPlayerIndex();
             var frequency = Piano.frequencies[note];
-            var rampUpSec = Piano.rampUpSec;
-            var rampDownSec = Math.max(rampUpSec, durationSec - rampUpSec);
             if (frequency && durationSec) {
-                var f1 = Piano.frequencies["a0"];
-                var f2 = Piano.frequencies["c8"];
-                var s = Math.sqrt(Math.sqrt((frequency - f1) / (f2 - f1)));
-                this.setVolumes(playerIndex, [1.0 - s, s]);
-                this.playTone(playerIndex, timeSec, frequency, rampUpSec, rampDownSec);
+                var volume = 1;
+                var noteForward = Piano.notes[note] / (Piano.notesCount - 1);
+                var noteBackward = 1 - noteForward;
+                var volumeLeft = this.useStereoBalance ? volume * noteBackward : volume;
+                var volumeRight = this.useStereoBalance ? volume * noteForward : volume;
+                var rampUpSec = this.rampUpSec;
+                var rampDownSec = Math.max(rampUpSec, durationSec - rampUpSec);
+                this.playKeyTone(timeSec, volumeLeft, volumeRight, frequency, rampUpSec, rampDownSec);
+                if (this.useHarmonics) {
+                    var harmonics = Math.round(this.maxHarmonics * noteBackward * noteBackward);
+                    for (var h = 0; h < harmonics; h++) {
+                        var hMul = h + 2;
+                        var hForward = h / harmonics;
+                        var hBackward = 1 - hForward;
+                        var hVolumeLeft = volumeLeft / hMul * noteBackward;
+                        var hVolumeRight = volumeRight / hMul * noteBackward;
+                        var hSharpnessMul = 1 + 0.02 * noteBackward;
+                        var hFrequency = frequency * hMul * hSharpnessMul;
+                        var hHoldMul = 1 - 0.2 + 0.4 * noteBackward * hBackward;
+                        var hRampUpSec = rampUpSec;
+                        var hRampDownSec = rampDownSec * hHoldMul;
+                        if (hVolumeLeft >= this.minVolumeLevel || hVolumeRight >= this.minVolumeLevel)
+                            this.playKeyTone(timeSec, hVolumeLeft, hVolumeRight, hFrequency, hRampUpSec, hRampDownSec);
+                    }
+                }
                 return rampUpSec + rampDownSec;
             }
             else
                 return 0;
         };
-        Piano.prototype.chooseNextPlayerIndex = function () {
-            var result = this.playerIndex;
-            this.playerIndex = (this.playerIndex + 1) % Piano.playersCount;
-            return result;
+        Piano.prototype.playKeyTone = function (timeSec, volumeLeft, volumeRight, frequency, rampUpSec, rampDownSec) {
+            this.fixPlayerIndex(timeSec);
+            this.setVolumes(this.playerIndex, [volumeLeft, volumeRight]);
+            this.playTone(this.playerIndex, timeSec, frequency, rampUpSec, rampDownSec);
         };
-        Piano.rampUpSec = 0.05;
-        Piano.playersCount = 16;
+        Piano.getNotesIndices = function (frequencies) {
+            var notes = {};
+            var index = 0;
+            for (var noteFreq in frequencies)
+                notes[noteFreq] = index++;
+            return notes;
+        };
+        Piano.initialPlayersCount = 16;
+        Piano.notesCount = 88;
         Piano.frequencies = {
             "a0": 27.50, "#a0": 29.14, "b0": 30.87,
             "c1": 32.70, "#c1": 34.65, "d1": 36.71, "#d1": 38.89, "e1": 41.20, "f1": 43.65, "#f1": 46.25, "g1": 49.00, "#g1": 51.91, "a1": 55.00, "#a1": 58.27, "b1": 61.74,
@@ -369,6 +429,7 @@ var WebTones;
             "c7": 2093.00, "#c7": 2217.46, "d7": 2349.32, "#d7": 2489.02, "e7": 2637.02, "f7": 2793.83, "#f7": 2959.96, "g7": 3135.96, "#g7": 3322.44, "a7": 3520.00, "#a7": 3729.31, "b7": 3951.07,
             "c8": 4186.09,
         };
+        Piano.notes = Piano.getNotesIndices(Piano.frequencies);
         return Piano;
     }(WebTones.Instrument));
     WebTones.Piano = Piano;
@@ -424,6 +485,8 @@ var WebTones;
                         totalChars += s > 0 ? 1 : 0;
                         if (subNotes[s].length > 0) {
                             var symbol = this.createSymbol(subNotes[s]);
+                            symbol.first = c == 0 && n == 0 && s == 0;
+                            symbol.last = c == chords.length - 1 && n == notes.length - 1 && s == subNotes.length - 1;
                             symbol.chordFirst = n == 0 && s == 0;
                             symbol.chordLast = n == notes.length - 1 && s == subNotes.length - 1;
                             symbol.seqFirst = s == 0;
@@ -547,13 +610,19 @@ var WebTones;
             else {
                 if (symbol.seqFirst && !symbol.seqLast) {
                     var index2 = this.findSeqLast(index);
-                    if (index2 > -1)
-                        return this.drawMultiNotes(index, index2);
-                    else
-                        return this.drawSingleNote(index);
+                    if (index2 > -1) {
+                        this.drawMultiNotes(index, index2);
+                        return index2;
+                    }
+                    else {
+                        this.drawSingleNote(index);
+                        return index;
+                    }
                 }
-                else
-                    return this.drawSingleNote(index);
+                else {
+                    this.drawSingleNote(index);
+                    return index;
+                }
             }
         };
         StaffStringPainter.prototype.drawStaff = function () {
@@ -587,51 +656,55 @@ var WebTones;
         };
         StaffStringPainter.prototype.drawMultiNotes = function (index1, index2) {
             var flagDir = this.getFlagDirMore(index1, index2);
-            var noteX1 = this.getCurrentX();
-            var noteX2 = this.getCurrentX();
+            var noteX1;
+            var noteX2;
             for (var i = index1; i <= index2; i++) {
-                noteX2 = this.drawNote(i, flagDir);
+                this.drawNote(i, flagDir, false);
+                if (i == index1)
+                    noteX1 = this.getCurrentX();
+                if (i == index2)
+                    noteX2 = this.getCurrentX();
                 this.notesDrawn += 1.0;
             }
             this.drawMultiDashes(index1, index2, noteX1, noteX2, flagDir);
-            return index2;
         };
         StaffStringPainter.prototype.drawSingleNote = function (index) {
             var symbol = this.symbols[index];
             var line = this.getNoteLine(symbol.noteName);
             if (line != null) {
                 var flagDir = this.getFlagDir(line);
-                var noteX = this.drawNote(index, flagDir);
-                this.drawDashes(line, symbol.noteDiv, noteX, flagDir);
+                this.drawNote(index, flagDir, true);
                 this.notesDrawn += 1.0;
             }
-            return index;
         };
-        StaffStringPainter.prototype.drawNote = function (index, flagDir) {
+        StaffStringPainter.prototype.drawNote = function (index, flagDir, drawDashes) {
             var symbol = this.symbols[index];
             if (!symbol.error) {
-                var noteX = this.getCurrentX();
                 var line = this.getNoteLine(symbol.noteName);
                 if (line != null) {
+                    var noteX = this.getCurrentX();
                     var noteY = this.getNoteY(line);
                     if (symbol.noteName.indexOf('#') > -1)
                         this.drawNoteMark('♯', noteX, noteY);
                     else if (symbol.noteName.indexOf('@') > -1)
                         this.drawNoteMark('♭', noteX, noteY);
+                    var startNotesDrawn = this.notesDrawn;
                     noteX = this.getCurrentX();
-                    if (symbol.posBegin >= this.selectionBegin && symbol.posEnd <= this.selectionEnd)
+                    if (symbol.posBegin >= this.selectionBegin && symbol.posEnd <= this.selectionEnd ||
+                        symbol.posBegin <= this.selectionBegin && symbol.posEnd >= this.selectionEnd)
                         this.drawNoteSelection(noteX, noteY);
                     this.drawMiniLines(line, noteX);
                     this.drawElipse(noteX, noteY, symbol.noteDiv > 2);
                     this.drawFlagPost(line, symbol.noteDiv, flagDir, noteX, noteY);
+                    if (drawDashes)
+                        this.drawDashes(line, symbol.noteDiv, noteX, flagDir);
+                    this.notesDrawn = startNotesDrawn;
                     this.updateWidth(noteX);
                     this.updateHeight(noteY);
                 }
-                return noteX;
             }
             else {
                 this.drawError();
-                return this.getCurrentX();
             }
         };
         StaffStringPainter.prototype.drawMiniLine = function (line, x) {
@@ -823,12 +896,15 @@ var WebTones;
         __extends(StaffStringPlayer, _super);
         function StaffStringPlayer(instrument) {
             var _this = _super.call(this) || this;
+            _this.timeSec = 0;
+            _this.cordStartTimeSec = 0;
+            _this.cordEndTimeSec = 0;
+            _this.liveSchedule = true;
             _this.instrument = instrument;
-            _this.timeSec = instrument.getCurrentTimeSec();
             return _this;
         }
-        StaffStringPlayer.prototype.setAsyncSchedule = function (asyncSchedule) {
-            this.asyncSchedule = asyncSchedule;
+        StaffStringPlayer.prototype.setLiveSchedule = function (liveSchedule) {
+            this.liveSchedule = liveSchedule;
         };
         StaffStringPlayer.prototype.setSymbolReceiver = function (symbolReceiver) {
             this.symbolReceiver = symbolReceiver;
@@ -838,8 +914,8 @@ var WebTones;
         };
         StaffStringPlayer.prototype.processSymbolsFrom = function (beginIndex) {
             var _this = this;
-            if (this.asyncSchedule)
-                this.timeSec = this.instrument.getCurrentTimeSec() + StaffStringPlayer.AsyncOverlapSec;
+            if (this.timeSec < this.instrument.getCurrentTimeSec())
+                this.timeSec = this.instrument.getCurrentTimeSec();
             var _loop_1 = function (index) {
                 var symbol = this_1.symbols[index];
                 if (symbol.chordFirst) {
@@ -856,8 +932,8 @@ var WebTones;
                 // todo remove
                 if (symbol.chordLast)
                     this_1.timeSec = this_1.cordEndTimeSec + 0.01;
-                if (symbol.chordLast && this_1.asyncSchedule) {
-                    var delaySec = this_1.timeSec - this_1.instrument.getCurrentTimeSec() - StaffStringPlayer.AsyncOverlapSec;
+                if (symbol.chordLast && this_1.liveSchedule) {
+                    var delaySec = this_1.timeSec - this_1.instrument.getCurrentTimeSec() - StaffStringPlayer.OverlapSec;
                     setTimeout(function () { return _this.processSymbolsFrom(index + 1); }, Math.max(0, delaySec * 1000));
                     return "break";
                 }
@@ -878,7 +954,7 @@ var WebTones;
             else
                 this.timeSec += this.instrument.playNote(this.timeSec, 'a2', 0.5);
         };
-        StaffStringPlayer.AsyncOverlapSec = 0.1;
+        StaffStringPlayer.OverlapSec = 0.1;
         return StaffStringPlayer;
     }(WebTones.StaffString));
     WebTones.StaffStringPlayer = StaffStringPlayer;

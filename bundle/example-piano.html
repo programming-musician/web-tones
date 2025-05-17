@@ -8,22 +8,32 @@
 	<script type="text/javascript" src="./example-piano.js"></script>
 	<script type="text/javascript">
 		window.onload = () => {
-			document.getElementById('play_button').onclick = () => examplePlayMusic('number_input');
-			document.getElementById('number_input').oninput = () => exampleDrawMusic('number_input', 'staff_output');
-			document.getElementById('number_input').onselectionchange = () => exampleDrawMusic('number_input', 'staff_output');
-			document.getElementById('number_input').value = notesFuElise;
-			exampleDrawMusic('number_input', 'staff_output');
+			document.getElementById('playMusic').onclick = () => examplePlayMusic('numberInput');
+			document.getElementById('numberInput').oninput = () => exampleDrawMusic('numberInput', 'staffOutput');
+			document.getElementById('numberInput').onselectionchange = () => exampleDrawMusic('numberInput', 'staffOutput');
+			document.getElementById('numberInput').value = notesFuElise;
+			exampleDrawMusic('numberInput', 'staffOutput');
 		}
 	</script>
 </head>
 
 <body>
-	<textarea id="number_input" class="staff"></textarea>
+	<textarea id="numberInput" class="staff"></textarea>
 	<br />
-	<button id="play_button">Play music</button>
-	<br />
+	<div class="toolbar">
+		<input id="liveSchedule" type="checkbox" checked />
+		<label for="liveSchedule">Show highlight</label>
+
+		<input id="harmonics" type="checkbox" checked />
+		<label for="harmonics">Generate harmonics</label>
+
+		<input id="stereoBalance" type="checkbox" checked />
+		<label for="stereoBalance">Use stereo balance</label>
+
+		<button id="playMusic">Play</button>
+	</div>
 	<div class="staff">
-		<canvas id="staff_output" class="staff" width="800" height="600"></canvas>
+		<canvas id="staffOutput" class="staff" width="800" height="600"></canvas>
 	</div>
 	<div id="console"></div>
 </body>
