@@ -44,8 +44,8 @@ staffPainter.process('e5/16,d#5/16 | e5/16,d#5/16,e5/16,b4/16,d5/16,c5/16');
 ```
 
 ## 📻 Theremin
-```
 Class emulating electric theremin device ([wiki]([https://en.wikipedia.org/wiki/Piano_key_frequencies](https://en.wikipedia.org/wiki/Theremin))).
 See interactive example [here](https://programming-musician.github.io/web-tones/bundle/example-theremin.html). \
 ![Example](https://programming-musician.github.io/web-tones/bundle/example-piano.png)
+```
 ```
