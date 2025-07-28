@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="UTF-8">
+	<link rel="stylesheet" href="example-theremin.css">
+	<script type="text/javascript" src="./web-tones.js"></script>
+	<script type="text/javascript" src="./example-theremin.js"></script>
+	<script type="text/javascript">
+		window.onload = () => {
+			document.getElementById('playMusic').onclick = () => playMusic('musicInput');
+			document.getElementById('pauseMusic').onclick = event => pauseMusic(event);
+			document.getElementById('control0').onmousedown = event => thereminControl(event, 0);
+			document.getElementById('control0').onmousemove = event => thereminControl(event, 0);
+			document.getElementById('control1').onmousedown = event => thereminControl(event, 1);
+			document.getElementById('control1').onmousemove = event => thereminControl(event, 1);
+		}
+	</script>
+</head>
+
+<body>
+	<textarea id="musicInput" class="staff"></textarea>
+	<br />
+	<div class="toolbar">
+		<button id="playMusic">Play</button>
+		<button id="pauseMusic">Pause</button>
+	</div>
+	<div class="staff">
+		<div class="tile">
+			<canvas id="control0" class="staff" width="600" height="400"></canvas>
+			<br />
+			<select id="wave0">
+				<option value="0.1">0.1s</option>
+				<option value="0.25">0.25s</option>
+				<option value="0.50">0.50s</option>
+				<option value="1" selected="">1s</option>
+				<option value="2">2s</option>
+				<option value="4">4s</option>
+			</select>
+		</div>
+		<div class="tile">
+			<canvas id="control1" class="staff" width="600" height="400"></canvas>
+			<br />
+			<select id="wave1">
+				<option value=0.1>0.1s</option>
+				<option value=0.25>0.25s</option>
+				<option value=0.50>0.50s</option>
+				<option value=1 selected="">1s</option>
+				<option value=2>2s</option>
+				<option value=4>4s</option>
+			</select>
+		</div>
+	</div>
+	<div id="console"></div>
+</body>
+
+</html>

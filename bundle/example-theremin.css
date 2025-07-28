@@ -41,6 +41,7 @@ div.toolbar {
     border: 1px solid black;
     border-radius: 2px;
     background-color: white;
+    margin: 0.5em 20%;
     padding: 0.5em;
 }
 
@@ -50,7 +51,7 @@ button.play {
 
 textarea.staff {
     width: 90%;
-    height: 40%;
+    height: 20%;
     resize: vertical;
     border: 1px solid black;
     text-align: center;
@@ -58,10 +59,14 @@ textarea.staff {
 
 div.staff {
     width: 90%;
-    height: 50%;
+    height: 70%;
     resize: vertical;
     display: inline-block;
     background-color: white;
     border: 1px solid black;
     overflow: hidden auto;
+}
+
+canvas {
+    border: 1px solid black;
 }

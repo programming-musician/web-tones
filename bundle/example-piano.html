@@ -8,11 +8,11 @@
 	<script type="text/javascript" src="./example-piano.js"></script>
 	<script type="text/javascript">
 		window.onload = () => {
-			document.getElementById('playMusic').onclick = () => examplePlayMusic('numberInput');
-			document.getElementById('numberInput').oninput = () => exampleDrawMusic('numberInput', 'staffOutput');
-			document.getElementById('numberInput').onselectionchange = () => exampleDrawMusic('numberInput', 'staffOutput');
+			document.getElementById('playMusic').onclick = () => playMusic('numberInput');
+			document.getElementById('numberInput').oninput = () => drawMusic('numberInput', 'staffOutput');
+			document.getElementById('numberInput').onselectionchange = () => drawMusic('numberInput', 'staffOutput');
 			document.getElementById('numberInput').value = notesFuElise;
-			exampleDrawMusic('numberInput', 'staffOutput');
+			drawMusic('numberInput', 'staffOutput');
 		}
 	</script>
 </head>
@@ -21,6 +21,9 @@
 	<textarea id="numberInput" class="staff"></textarea>
 	<br />
 	<div class="toolbar">
+		<input id="bpm" type="number" value="72" />
+		<label for="bpm">BPM</label>
+
 		<input id="liveSchedule" type="checkbox" checked />
 		<label for="liveSchedule">Show highlight</label>
 
